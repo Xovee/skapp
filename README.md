@@ -65,7 +65,7 @@ project_root/
 
 1. Download Required Datasets:
 ICIP: 
-SMPD: 
+SMPD: https://smp-challenge.com/download.html
 INSTAGRAM: https://sites.google.com/site/sbkimcv/dataset/instagram-influencer-dataset
 Place the datasets in the dataset/origin_dataset folder. 
 
