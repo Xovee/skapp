@@ -64,9 +64,13 @@ project_root/
 ```
 
 1. Download Required Datasets:
-ICIP: 
+
+ICIP: http://www.visiongarage.altervista.org/popularitydataset/
+
 SMPD: https://smp-challenge.com/download.html
+
 INSTAGRAM: https://sites.google.com/site/sbkimcv/dataset/instagram-influencer-dataset
+
 Place the datasets in the dataset/origin_dataset folder. 
 
 2. Download Pre-trained Models:
