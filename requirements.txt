@@ -1,0 +1,11 @@
+en-core-web-sm==2.3.0
+huggingface-hub==0.17.3
+numpy==1.24.1
+pandas==1.5.3
+pytorch-tabnet==4.1.0
+spacy==2.3.9
+tokenizers==0.14.1
+torch==1.13.1
+torchaudio==0.13.1
+torchvision==0.14.1
+tqdm==4.64.1
