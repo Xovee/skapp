@@ -176,7 +176,7 @@ Here we train the model `SKAPP` with the fine-tuning model. The model parameters
 
 Step 3: evaluation
 
-Replace the path `model_path` with the model parameter path obtained by training the code `python src/train.py` above.
+Replace the path `model_path` with the model parameter path obtained by training the code `python train.py` above.
 
 ```shell
 cd SKAPP/src
