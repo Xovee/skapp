@@ -8,7 +8,7 @@ Create a virtual environment and install GPU-support packages via [Anaconda](htt
 
 ```shell
 # create virtual environment
-conda create --name SKAPP python=3.9 cudatoolkit=12.2
+conda create --name SKAPP python=3.9
 
 # activate virtual environment
 conda activate SKAPP
@@ -93,8 +93,8 @@ Here we take the sample of ICIP dataset as an example to demonstrate the usage.
 
 ```shell
 cd SKAPP
-python src/preprocess/ICIP/1_bulid_dataset.py
-python src/preprocess/ICIP/2_disassemble.py
+python src/preprocess/ICIP/1_build_dataset.py
+python src/preprocess/ICIP/2_preprocess.py
 python src/preprocess/ICIP/3_retrieval.py
 python src/preprocess/ICIP/4_disassemble.py
 ```

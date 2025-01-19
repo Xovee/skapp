@@ -1,0 +1,12 @@
+2025-01-19 10:59:57,028 - INFO - [94mRandom Seed: [0m2024 
+2025-01-19 10:59:57,028 - INFO - [94mDevice: [0mcuda:0 
+2025-01-19 10:59:57,030 - INFO - [94mModel: [0mSKAPP_ALL_ITEMS 
+2025-01-19 10:59:57,030 - INFO - [94mDataset: [0mICIP
+2025-01-19 10:59:57,030 - INFO - [94mMetric: [0mMSE
+2025-01-19 10:59:57,030 - INFO - [94mOptimizer: [0mAdam(lr = 0.0001)
+2025-01-19 10:59:57,030 - INFO - [94mTotal Epoch: [0m1000 Turns
+2025-01-19 10:59:57,030 - INFO - [94mRetrieval Num: [0m50
+2025-01-19 10:59:57,030 - INFO - [94mEarly Stop: [0m10 Turns
+2025-01-19 10:59:57,030 - INFO - [94mBatch Size: [0m64
+2025-01-19 10:59:57,030 - INFO - [94mTraining Starts![0m
+2025-01-19 10:59:57,030 - INFO - -----------------------------------Epoch 1 Start!-----------------------------------

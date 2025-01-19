@@ -15,7 +15,6 @@ def image2text(meta_file_path, image_path):
 
     def loading_model():
         local_path = os.path.join(preprocess_model_path, "BLIP")
-        print()
         processor = BlipProcessor.from_pretrained(local_path)
         model = BlipForConditionalGeneration.from_pretrained(local_path).to("cuda")
         return processor, model
@@ -198,7 +197,7 @@ def merged_text2nouns2verb2adj(meta_file_path):
 
 if __name__ == '__main__':
 
-    image_path = r'datasets/ICIP/pic'
+    image_path = r'datasets/origin_dataset/ICIP/pic'
 
     dataset_path = r"datasets/ICIP/dataset.pkl"
 
