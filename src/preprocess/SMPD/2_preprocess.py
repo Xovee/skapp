@@ -18,14 +18,13 @@ from angle_emb import AnglE
 
 import spacy
 
-preprocess_model_path = r"pretrained_model"
 
 def image2text(meta_file_path, image_path):
 
     def loading_model():
-        local_path = os.path.join(preprocess_model_path, "BLIP")
-        processor = BlipProcessor.from_pretrained(local_path)
-        model = BlipForConditionalGeneration.from_pretrained(local_path).to("cuda")
+        model_name = "Salesforce/blip-image-captioning-large"
+        processor = BlipProcessor.from_pretrained(model_name)
+        model = BlipForConditionalGeneration.from_pretrained(model_name).to("cuda")
         return processor, model
     def convert_image_to_text(processor, model, image_path):
         raw_image = Image.open(image_path).convert('RGB')
@@ -67,11 +66,10 @@ def image2text(meta_file_path, image_path):
 
 
 def image2vec(meta_file_path, image_path):
-
-
     def load_VIT_model():
-        processor = ViTImageProcessor.from_pretrained(os.path.join(preprocess_model_path, "VIT"))
-        model = ViTModel.from_pretrained(os.path.join(preprocess_model_path, "VIT")).to("cuda")
+        model_name = "google/vit-base-patch16-224-in21k"
+        processor = ViTImageProcessor.from_pretrained(model_name)
+        model = ViTModel.from_pretrained(model_name).to("cuda")
         return processor, model
 
     def image_to_embedding(processor, model, image_path):
@@ -131,9 +129,9 @@ def image2vec(meta_file_path, image_path):
 
 
 def merged_text_create_and_to_vec(meta_file_path):
-
     def load_bert_model():
-        angel = AnglE.from_pretrained(os.path.join(preprocess_model_path, "BERT"), pooling_strategy='cls_avg').cuda()
+        model_name = "SeanLee97/angle-bert-base-uncased-nli-en-v1"
+        angel = AnglE.from_pretrained(model_name, pooling_strategy='cls_avg').cuda()
         return angel
 
     meta_data = pd.read_pickle(meta_file_path)

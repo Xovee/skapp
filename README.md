@@ -24,46 +24,38 @@ The storage format of the dataset and pre-trained model is:
 project_root/
 │
 ├── dataset/
-│ └── origin_dataset/
-│ ├── ICIP/
-│ │ ├── headers_TRAIN.csv
-│ │ ├── img_info_TRAIN.csv
-│ │ ├── popularity_TRAIN.csv
-│ │ ├── users_TRAIN.csv
-│ │ └── pic/
-│ │ ├── 1.jpg
-│ │ └── 2.jpg
-│ │
-│ ├── SMPD/
-│ │ ├── train_additional_information.json
-│ │ ├── train_category.json
-│ │ ├── train_temporalspatial_information.json
-│ │ ├── train_user_data.json
-│ │ ├── train_label.txt
-│ │ ├── train_text.json
-│ │ └── pic/
-│ │ ├── 1.jpg
-│ │ └── 2.jpg
-│ │
-│ └── INSTAGRAM/
-│ ├── json/
-│ │ ├── 1.json
-│ │ └── 2.json
-│ ├── pic/
-│ │ ├── 1.jpg
-│ │ └── 2.jpg
-│ └── post_info.txt
-│
-└── pretrained_model/
-├── Bert/
-│ └── <text_embedding_model>
-├── ViT/
-│ └── <image_embedding_model>
-└── BLIP/
-  └── <blip_model>
-```
+ └── origin_dataset/
+ ├── ICIP/
+ │ ├── headers_TRAIN.csv
+ │ ├── img_info_TRAIN.csv
+ │ ├── popularity_TRAIN.csv
+ │ ├── users_TRAIN.csv
+ │ └── pic/
+ │ ├── 1.jpg
+ │ └── 2.jpg
+ │
+ ├── SMPD/
+ │ ├── train_additional_information.json
+ │ ├── train_category.json
+ │ ├── train_temporalspatial_information.json
+ │ ├── train_user_data.json
+ │ ├── train_label.txt
+ │ ├── train_text.json
+ │ └── pic/
+ │ ├── 1.jpg
+ │ └── 2.jpg
+ │
+ └── INSTAGRAM/
+ ├── json/
+ │ ├── 1.json
+ │ └── 2.json
+ ├── pic/
+ │ ├── 1.jpg
+ │ └── 2.jpg
+ └── post_info.txt
 
-1. Download Required Datasets:
+```
+Download Required Datasets:
 
 ICIP: http://www.visiongarage.altervista.org/popularitydataset/
 
@@ -71,19 +63,7 @@ SMPD: https://smp-challenge.com/download.html
 
 INSTAGRAM: https://sites.google.com/site/sbkimcv/dataset/instagram-influencer-dataset
 
-Place the datasets in the dataset/origin_dataset folder. 
-
-2. Download Pre-trained Models:
-Place the pre-trained models in the pretrained_model folder, organized as follows:
-
-ViT: vit-base-patch16-224-in21k
-https://huggingface.co/google/vit-base-patch16-224-in21k
-
-Bert: angle-bert-base-uncased-nli-en-v1
-https://huggingface.co/SeanLee97/angle-bert-base-uncased-nli-en-v1
-
-BLIP: blip-image-captioning-large
-https://huggingface.co/Salesforce/blip-image-captioning-large
+Place the datasets in the dataset/origin_dataset folder.
 
 ## Usage
 
