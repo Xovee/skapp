@@ -34,43 +34,42 @@ First, download the datasets:
 
 - Instagram: https://sites.google.com/site/sbkimcv/dataset/instagram-influencer-dataset
 
-Then place the datasets in corresponding the `dataset/origin_dataset` folder.
+Then place the datasets in the corresponding `dataset/raw_dataset` folder.
 
-The storage format of the dataset and pre-trained model is:
+The storage format of the dataset is as follows:
 ```
 project_root/
 │
 ├── dataset/
- └── origin_dataset/
- │ └── ├── ICIP/
- │   ├── headers_TRAIN.csv
- │   ├── img_info_TRAIN.csv
- │   ├── popularity_TRAIN.csv
- │   ├── users_TRAIN.csv
- │   └── pic/
- │     ├── 1.jpg
- │     └── 2.jpg
- │
- ├── SMPD/
- │   ├── train_additional_information.json
- │   ├── train_category.json
- │   ├── train_temporalspatial_information.json
- │   ├── train_user_data.json
- │   ├── train_label.txt
- │   ├── train_text.json
- │   └── pic/
- │     ├── 1.jpg
- │     └── 2.jpg
- │
- └── INSTAGRAM/
- │   ├── json/
- │   │  ├── 1.json
- │   │  └── 2.json
- │   ├── pic/
- │   │  ├── 1.jpg
- │   │  └── 2.jpg
- │   └── post_info.txt
-
+│   └── raw_dataset/
+│       ├── ICIP/
+│       │   ├── headers_TRAIN.csv
+│       │   ├── img_info_TRAIN.csv
+│       │   ├── popularity_TRAIN.csv
+│       │   ├── users_TRAIN.csv
+│       │   └── pic/
+│       │       ├── 1.jpg
+│       │       └── 2.jpg
+│       │
+│       ├── SMPD/
+│       │   ├── train_additional_information.json
+│       │   ├── train_category.json
+│       │   ├── train_temporalspatial_information.json
+│       │   ├── train_user_data.json
+│       │   ├── train_label.txt
+│       │   ├── train_text.json
+│       │   └── pic/
+│       │       ├── 1.jpg
+│       │       └── 2.jpg
+│       │
+│       └── INSTAGRAM/
+│           ├── json/
+│           │   ├── 1.json
+│           │   └── 2.json
+│           ├── pic/
+│           │   ├── 1.jpg
+│           │   └── 2.jpg
+│           └── post_info.txt
 ```
 
 
