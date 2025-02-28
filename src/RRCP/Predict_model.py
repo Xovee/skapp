@@ -41,6 +41,7 @@ class RRCP_Model(nn.Module):
         output = self.predict_linear_1(output)
         output = self.relu(output)
         label = self.label_embedding_linear(retrieved_label_list)
+        label = label.squeeze(1)
         output = torch.cat([output, label], dim=1)
         output = self.predict_linear_2(output)
 

@@ -93,40 +93,10 @@ python src/preprocess/ICIP/4_disassemble.py
 ### Pre-training
 
 ```shell
-cd SKAPP/src/RRCP
-python train_all_item.py \
-  --seed=2024 \
-  --device=cuda:0 \
-  --metric=MSE \
-  --save=RESULT \
-  --epochs=1000 \
-  --batch_size=16 \
-  --early_stop_turns=10 \
-  --loss=MSE \
-  --optim=Adam \
-  --lr=1e-4 \
-  --decay_rate=1.0 \
-  --dataset_id=ICIP \
-  --dataset_path=../../datasets \
-  --retrieval_num=500 \
-  --model_id=SKAPP_ALL_ITEMS
+cd src/RRCP
+python train_all_item.py --seed=2024 --device=cuda:0 --metric=MSE --save=RESULT --epochs=1000 --batch_size=16 --early_stop_turns=10 --loss=MSE --optim=Adam --lr=1e-4 --decay_rate=1.0 --dataset_id=ICIP --dataset_path=../../datasets --retrieval_num=500 --model_id=SKAPP_ALL_ITEMS
   
- python train_single_item.py \
-  --seed=2024 \
-  --device=cuda:0 \
-  --metric=MSE \
-  --save=RESULT \
-  --epochs=1000 \
-  --batch_size=1024 \
-  --early_stop_turns=10 \
-  --loss=MSE \
-  --optim=Adam \
-  --lr=1e-4 \
-  --decay_rate=1.0 \
-  --dataset_id=ICIP_dissembled \
-  --dataset_path=../../datasets \
-  --retrieval_num=1 \
-  --model_id=SKAPP_SINGLE_ITEMS
+python train_single_item.py --seed=2024 --device=cuda:0 --metric=MSE --save=RESULT --epochs=1000 --batch_size=1024 --early_stop_turns=10 --loss=MSE --optim=Adam --lr=1e-4 --decay_rate=1.0 --dataset_id=ICIP_dissembled --dataset_path=../../datasets --retrieval_num=1 --model_id=SKAPP_SINGLE_ITEMS
 ```
 
 Here we train the model `SKAPP_ALL_ITEMS` and `SKAPP_SINGLE_ITEMS`. The model parameters will be saved in the path `./RESULT/`.
@@ -144,23 +114,7 @@ Step 2: Train SKAPP
 
 ```shell
 cd SKAPP/src
-python train.py \
-  --seed=2024 \
-  --device=cuda:0 \
-  --metric=MSE \
-  --save=RESULT \
-  --epochs=1000 \
-  --batch_size=64 \
-  --early_stop_turns=5 \
-  --loss=MSE \
-  --optim=Adam \
-  --lr=1e-4 \
-  --decay_rate=1.0 \
-  --dataset_id=ICIP \
-  --dataset_path=..\datasets \
-  --retrieval_num=500 \
-  --model_id=SKAPP \
-  --threshold_of_RRCP=0
+python train.py --seed=2024 --device=cuda:0 --metric=MSE --save=RESULT --epochs=1000 --batch_size=64 --early_stop_turns=5 --loss=MSE --optim=Adam --lr=1e-4 --decay_rate=1.0 --dataset_id=ICIP --dataset_path=..\datasets --retrieval_num=500 --model_id=SKAPP --threshold_of_RRCP=0
 ```
 
 Here we train the model `SKAPP` with the fine-tuning model. The model parameters will be saved in the path `./RESULT/`.
@@ -171,18 +125,7 @@ Replace the path `model_path` with the model parameter path obtained by training
 
 ```shell
 cd SKAPP/src
-python test.py \
-  --seed=2024 \
-  --device=cuda:0 \
-  --metric='MSE,SRC,MAE' \
-  --save=RESULT \
-  --batch_size=256 \
-  --dataset_id=ICIP \
-  --dataset_path=..\datasets \
-  --model_id=graph \
-  --retrieval_num=500 \
-  --model_path="path/to/model_path" \
-  --threshold_of_RRCP=0
+python test.py --seed=2024 --device=cuda:0 --metric='MSE,SRC,MAE' --save=RESULT --batch_size=256 --dataset_id=ICIP --dataset_path=..\datasets --model_id=graph --retrieval_num=500 --model_path="path/to/model_path" --threshold_of_RRCP=0
 ```
 
 

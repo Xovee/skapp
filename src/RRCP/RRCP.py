@@ -5,7 +5,7 @@ from tqdm import tqdm
 import argparse
 
 def load_model(model_path):
-    model = torch.load(model_path)
+    model = torch.load(model_path, weights_only=False)
     model.cuda()
     model.eval()
     return model

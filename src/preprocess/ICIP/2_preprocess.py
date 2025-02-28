@@ -163,6 +163,7 @@ def merged_text_create_and_to_vec(meta_file_path):
 
 def merged_text2nouns2verb2adj(meta_file_path):
 
+    spacy.cli.download("en_core_web_sm")
     nlp = spacy.load("en_core_web_sm")
 
     n_nouns = []

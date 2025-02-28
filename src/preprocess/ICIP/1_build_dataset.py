@@ -1,6 +1,7 @@
 import pandas as pd
 import math
 from tqdm import tqdm
+from pathlib import Path
 import re
 import os
 
@@ -117,14 +118,14 @@ def process_user_data(dataset, users, path):
 
 if __name__ == "__main__":
 
-    path = r"datasets/ICIP/dataset.pkl"
-    dataset_path = r"datasets/origin_dataset/ICIP"
+    dataset_path = Path("datasets/raw_dataset/ICIP")
 
-    users = pd.read_csv(os.path.join(dataset_path, 'users_TRAIN.csv'))
-    headers = pd.read_csv(os.path.join(dataset_path, 'headers_TRAIN.csv'))
-    img_info = pd.read_csv(os.path.join(dataset_path, 'img_info_TRAIN.csv'))
-    popularity = pd.read_csv(os.path.join(dataset_path, 'popularity_TRAIN.csv'))
+    users = pd.read_csv(os.path.join(dataset_path / 'users_TRAIN.csv'))
+    headers = pd.read_csv(os.path.join(dataset_path / 'headers_TRAIN.csv'))
+    img_info = pd.read_csv(os.path.join(dataset_path / 'img_info_TRAIN.csv'))
+    popularity = pd.read_csv(os.path.join(dataset_path / 'popularity_TRAIN.csv'))
 
+    path = Path("datasets/ICIP/dataset.pkl")
     dataset = process_meta_data(headers, img_info, popularity, path)
     print('Process meta data done!')
 
