@@ -2,9 +2,9 @@
 
 This repo contains a reference implementation of the SKAPP model described in the following paper:
 
-> Improving Multimodal Social Media Popularity Prediction via Selective Retrieval Knowledge Augmentation  
 > Xovee Xu, Yifan Zhang, Fan Zhou, and Jingkuan Song  
-> AAAI Conference on Artificial Intelligence, 2025  
+> Improving Multimodal Social Media Popularity Prediction via Selective Retrieval Knowledge Augmentation   
+> AAAI Conference on Artificial Intelligence, 2025 . 
 
 ## Environmental Settings
 
@@ -34,7 +34,7 @@ First, download the datasets:
 
 - Instagram: https://sites.google.com/site/sbkimcv/dataset/instagram-influencer-dataset
 
-Then place the datasets in the corresponding `dataset/raw_dataset` folder.
+Then place the datasets in the corresponding `dataset/raw_dataset/` folder.
 
 The storage format of the dataset is as follows:
 ```
@@ -75,14 +75,14 @@ project_root/
 
 ## Usage
 
-Here we take the sample of ICIP dataset as an example to demonstrate the usage.
+Here we take the ICIP dataset as an example to demonstrate the usage.
 
 ### Preprocess
 
 Run the following commands for preprocessing the datasets. During the preprocessing, you will download the pretrained models (only once).
 
 ```shell
-cd SKAPP
+cd skapp
 python src/preprocess/ICIP/1_build_dataset.py
 python src/preprocess/ICIP/2_preprocess.py
 python src/preprocess/ICIP/3_retrieval.py
@@ -92,45 +92,43 @@ python src/preprocess/ICIP/4_disassemble.py
 ### Pre-training
 
 ```shell
-cd src/RRCP
-python train_all_item.py --seed=2024 --device=cuda:0 --metric=MSE --save=RESULT --epochs=1000 --batch_size=16 --early_stop_turns=10 --loss=MSE --optim=Adam --lr=1e-4 --decay_rate=1.0 --dataset_id=ICIP --dataset_path=../../datasets --retrieval_num=500 --model_id=SKAPP_ALL_ITEMS
+python src/RRCP/train_all_item.py --dataset_id=ICIP
   
-python train_single_item.py --seed=2024 --device=cuda:0 --metric=MSE --save=RESULT --epochs=1000 --batch_size=1024 --early_stop_turns=10 --loss=MSE --optim=Adam --lr=1e-4 --decay_rate=1.0 --dataset_id=ICIP_dissembled --dataset_path=../../datasets --retrieval_num=1 --model_id=SKAPP_SINGLE_ITEMS
+python src/RRCP/train_single_item.py --dataset_id=ICIP_dissembled
 ```
 
-Here we train the model `SKAPP_ALL_ITEMS` and `SKAPP_SINGLE_ITEMS`. The model parameters will be saved in the path `./RESULT/`.
+Here we train the model `skapp_all_items` and `skapp_single_item`. The model parameters will be saved in the path `/saved_models/`.
 
 ### Evaluation
 
-Step 1: SKAPP generates
+Step 1: RRCP
+
+Remember to replace the `"YOUR_PATH"` to the actual saved model, e.g., `trained_model/model_10.pth`.
 
 ```shell
 cd SKAPP
-python src/RRCP/RRCP.py --all_model_path "path/to/all_model_path" --dissembled_model_path "path/to/dissembled_model_path" --dataset_path datasets/ICIP
+python src/RRCP/RRCP.py --all_model_path "PATH" --dissembled_model_path "PATH" --dataset_path datasets/ICIP
 ```
 
-Step 2: Train SKAPP
+Step 2: Training
 
 ```shell
-cd SKAPP/src
-python train.py --seed=2024 --device=cuda:0 --metric=MSE --save=RESULT --epochs=1000 --batch_size=64 --early_stop_turns=5 --loss=MSE --optim=Adam --lr=1e-4 --decay_rate=1.0 --dataset_id=ICIP --dataset_path=..\datasets --retrieval_num=500 --model_id=SKAPP --threshold_of_RRCP=0
+python src/train.py --dataset_id=ICIP  --model_id=SKAPP
 ```
 
-Here we train the model `SKAPP` with the fine-tuning model. The model parameters will be saved in the path `./RESULT/`.
+Here we train the model `SKAPP` with the fine-tuning model. The model parameters will be saved in the path `/saved_models/`.
 
 Step 3: Evaluation
 
-Replace the path `model_path` with the model parameter path obtained by training the code `python train.py` above.
+Remember to replace the actual path `model_path`, e.g. `checkpoint_10_epoch.pkl`.
 
 ```shell
-cd SKAPP/src
-python test.py --seed=2024 --device=cuda:0 --metric='MSE,SRC,MAE' --save=RESULT --batch_size=256 --dataset_id=ICIP --dataset_path=..\datasets --model_id=graph --retrieval_num=500 --model_path="path/to/model_path" --threshold_of_RRCP=0
+python src/test.py --dataset_id=ICIP --model_id=graph --model_path="PATH"
 ```
 
+## LICENSE
 
-
-
-
+MIT
 
 
 

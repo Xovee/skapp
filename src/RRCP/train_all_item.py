@@ -188,7 +188,7 @@ def main():
     parser.add_argument('--seed', default='2024', type=str, help='value of random seed')
     parser.add_argument('--device', default='cuda:0', type=str, help='device used in training')
     parser.add_argument('--metric', default='MSE', type=str, help='the judgement of the training')
-    parser.add_argument('--save', default=r'RESULT', type=str,
+    parser.add_argument('--save', default=r'./saved_models/', type=str,
                         help='folder to save the results')
     parser.add_argument('--epochs', default=1000, type=int, help='max number of training epochs')
     parser.add_argument('--batch_size', default=64, type=int, help='training batch size')
@@ -199,10 +199,10 @@ def main():
     parser.add_argument('--decay_rate', default=1.0, type=float, help='learning rate decay rate')
 
     parser.add_argument('--dataset_id', default='ICIP', type=str, help='id of dataset')
-    parser.add_argument('--dataset_path', default=r'..\..\datasets', type=str, help='path of dataset')
+    parser.add_argument('--dataset_path', default=r'./datasets', type=str, help='path of dataset')
 
-    parser.add_argument('--retrieval_num', default=50, type=int, help='number of retrieval')
-    parser.add_argument('--model_id', default='SKAPP_ALL_ITEMS', type=str, help='id of model')
+    parser.add_argument('--retrieval_num', default=500, type=int, help='number of retrieval')
+    parser.add_argument('--model_id', default='skapp_all_items', type=str, help='id of model')
 
     args = parser.parse_args()
 

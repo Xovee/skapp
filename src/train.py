@@ -47,45 +47,49 @@ def print_init_msg(logger, args):
     logger.info(BLUE + "Training Starts!" + ENDC)
 
 
-def make_saving_folder_and_logger(args):
-
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+def make_saving_folder_and_logger(args, timestamp):
     folder_name = f"train_{args.model_id}_{args.dataset_id}_{args.retrieval_num}_{args.metric}_{timestamp}"
 
-    father_folder_name = args.save
-    if not os.path.exists(father_folder_name):
-        os.makedirs(father_folder_name)
-    folder_path = os.path.join(father_folder_name, folder_name)
-    os.mkdir(folder_path)
+    parent_folder_name = args.save
+    if not os.path.exists(parent_folder_name):
+        os.makedirs(parent_folder_name)
+    folder_path = os.path.join(parent_folder_name, folder_name)
+    
+    if not os.path.exists(folder_path):
+        os.mkdir(folder_path)
 
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
+    
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
-    file_handler = logging.FileHandler(f'{father_folder_name}/{folder_name}/log.txt')
+    
+    file_handler = logging.FileHandler(f'{folder_path}/log.txt')
     file_handler.setLevel(logging.INFO)
+
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(formatter)
     file_handler.setFormatter(formatter)
 
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
-    return father_folder_name, folder_name, logger
+
+    return parent_folder_name, folder_name, logger
 
 
-def delete_model(father_folder_name, folder_name, min_turn):
-    model_name_list = os.listdir(f"{father_folder_name}/{folder_name}")
+def delete_model(parent_folder_name, folder_name, min_turn):
+    model_name_list = os.listdir(f"{parent_folder_name}/{folder_name}")
     for i in range(len(model_name_list)):
         if model_name_list[i] != f'checkpoint_{min_turn}_epoch.pkl' and model_name_list[i] != 'log.txt':
-            os.remove(os.path.join(f'{father_folder_name}/{folder_name}', model_name_list[i]))
+            os.remove(os.path.join(f'{parent_folder_name}/{folder_name}', model_name_list[i]))
 
 def force_stop(msg):
     print(msg)
     sys.exit(1)
 
 def train_val(args):
-
-    father_folder_name, folder_name, logger = make_saving_folder_and_logger(args)
+    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+    parent_folder_name, folder_name, logger = make_saving_folder_and_logger(args, timestamp)
 
     device = torch.device(args.device)
 
@@ -131,15 +135,19 @@ def train_val(args):
             f"Current Best Total Loss comes from Epoch {min_turn} , min_total_loss = {min_total_valid_loss}")
 
         checkpoint = {"model_state_dict": model.state_dict()}
-        path_checkpoint = f"{father_folder_name}/{folder_name}/checkpoint_{i + 1}_epoch.pkl"
+        path_checkpoint = f"{parent_folder_name}/{folder_name}/checkpoint_{i + 1}_epoch.pkl"
 
         torch.save(checkpoint, path_checkpoint)
 
         logger.info("Model has been saved successfully!")
         if (i + 1) - min_turn > args.early_stop_turns:
             break
-    delete_model(father_folder_name, folder_name, min_turn)
+    delete_model(parent_folder_name, folder_name, min_turn)
     logger.info(BLUE + "Training is ended!" + ENDC)
+
+    if min_turn == 0:
+        logger.warning("Training did not complete successfully. Deleting empty folder.")
+        os.rmdir(os.path.join(parent_folder_name, folder_name))
 
 
 def run_one_epoch(args, model, loss_fn, optim, train_data_loader, valid_data_loader, device):
@@ -192,7 +200,7 @@ def main():
     parser.add_argument('--seed', default='2024', type=str, help='value of random seed')
     parser.add_argument('--device', default='cuda:0', type=str, help='device used in training')
     parser.add_argument('--metric', default='MSE', type=str, help='the judgement of the training')
-    parser.add_argument('--save', default=r'RESULT',
+    parser.add_argument('--save', default=r'./saved_models',
                         type=str, help='folder to save the results')
     parser.add_argument('--epochs', default=1000, type=int, help='max number of training epochs')
     parser.add_argument('--batch_size', default=64, type=int, help='training batch size')
@@ -202,7 +210,7 @@ def main():
     parser.add_argument('--lr', default=1e-4, type=float, help='learning rate')
     parser.add_argument('--decay_rate', default=1.0, type=float, help='learning rate decay rate')
     parser.add_argument('--dataset_id', default='ICIP', type=str, help='id of dataset')
-    parser.add_argument('--dataset_path', default=r'../datasets', type=str, help='path of dataset')
+    parser.add_argument('--dataset_path', default=r'./datasets', type=str, help='path of dataset')
     parser.add_argument('--retrieval_num', default=500, type=int, help='number of retrieval')
     parser.add_argument('--model_id', default='SKAPP', type=str, help='id of model')
     parser.add_argument('--threshold_of_RRCP', default=0, type=float)

@@ -125,10 +125,10 @@ if __name__ == "__main__":
     parser.add_argument('--seed', default='2024', type=str, help='value of random seed')
     parser.add_argument('--device', default='cuda:0', type=str, help='device used in testing')
     parser.add_argument('--metric', default=['MSE', 'SRC', 'MAE'], type=list, help='the judgement of the testing')
-    parser.add_argument('--save', default=r'RESULT', type=str, help='folder to save the results')
+    parser.add_argument('--save', default=r'/saved_models/', type=str, help='folder to save the results')
     parser.add_argument('--batch_size', default=256, type=int, help='training batch size')
     parser.add_argument('--dataset_id', default='ICIP', type=str, help='id of dataset')
-    parser.add_argument('--dataset_path', default=r'../datasets', type=str, help='path of dataset')
+    parser.add_argument('--dataset_path', default=r'./datasets', type=str, help='path of dataset')
     parser.add_argument('--model_id', default='SKAPP', type=str, help='id of model')
     parser.add_argument('--retrieval_num', default=500, type=int, help='number of retrieval')
     parser.add_argument('--model_path',
