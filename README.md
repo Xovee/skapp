@@ -1,10 +1,14 @@
-# SKAPP: Improving Multimodal Social Media Popularity Prediction via Selective Retrieval Knowledge Augmentation
+# SKAPP
 
 This repo contains a reference implementation of the SKAPP model described in the following paper:
 
 > Xovee Xu, Yifan Zhang, Fan Zhou, and Jingkuan Song  
 > Improving Multimodal Social Media Popularity Prediction via Selective Retrieval Knowledge Augmentation   
 > AAAI Conference on Artificial Intelligence, 2025 . 
+
+SKAPP is a multimodal learning framework for social UGCs. It equips
+with a *meta retriever*, a *selective refiner*, and a *knowledge augmentation 
+prediction network*.
 
 ## Environmental Settings
 
@@ -17,10 +21,10 @@ Create a virtual environment and install GPU-support packages via [Anaconda](htt
 conda create --name skapp python=3.9
 
 # activate virtual environment
-conda activate SKAPP
+conda activate skapp
 
 # install other dependencies
-pip3 install torch torchvision torchaudio
+# make sure cuda and pytorch are installed 
 pip3 install pandas huggingface-hub tqdm scikit-learn transformers angle_emb spacy
 ```
 
@@ -101,19 +105,18 @@ Here we train the model `skapp_all_items` and `skapp_single_item`. The model par
 
 ### Evaluation
 
-Step 1: RRCP
+Step 1: Obtain RRCP
 
 Remember to replace the `"YOUR_PATH"` to the actual saved model, e.g., `trained_model/model_10.pth`.
 
 ```shell
-cd SKAPP
 python src/RRCP/RRCP.py --all_model_path "PATH" --dissembled_model_path "PATH" --dataset_path datasets/ICIP
 ```
 
 Step 2: Training
 
 ```shell
-python src/train.py --dataset_id=ICIP  --model_id=SKAPP
+python src/train.py --dataset_id=ICIP  --model_id=skapp
 ```
 
 Here we train the model `SKAPP` with the fine-tuning model. The model parameters will be saved in the path `/saved_models/`.
@@ -125,6 +128,16 @@ Remember to replace the actual path `model_path`, e.g. `checkpoint_10_epoch.pkl`
 ```shell
 python src/test.py --dataset_id=ICIP --model_id=graph --model_path="PATH"
 ```
+
+## Citation
+```bibtex
+@inproceedings{xu2025skapp,
+  author    = {Xovee Xu and Yifan Zhang and Fan Zhou and Jingkuan Song},
+  title     = {Improving Multimodal Social Media Popularity Prediction via Selective Retrieval Knowledge Augmentation
+  booktitle = {AAAI Conference on Artificial Intelligence},
+  year      = {2025}
+```
+
 
 ## LICENSE
 
