@@ -10,7 +10,7 @@ from torch.optim import Adam, SGD
 from torch.utils.data import DataLoader
 
 from dataset import MyData, custom_collate_fn
-from Predict_model import RRCP_Model as my_model
+from predict_model import RRCP_Model as my_model
 import random
 import numpy as np
 from scipy.stats import spearmanr
@@ -188,7 +188,7 @@ def main():
     parser.add_argument('--seed', default='2024', type=str, help='value of random seed')
     parser.add_argument('--device', default='cuda:0', type=str, help='device used in training')
     parser.add_argument('--metric', default='MSE', type=str, help='the judgement of the training')
-    parser.add_argument('--save', default=r'/saved_models/', type=str,
+    parser.add_argument('--save', default=r'./saved_models/', type=str,
                         help='folder to save the results')
     parser.add_argument('--epochs', default=1000, type=int, help='max number of training epochs')
     parser.add_argument('--batch_size', default=1024, type=int, help='training batch size')

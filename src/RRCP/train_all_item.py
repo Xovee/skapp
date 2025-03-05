@@ -10,7 +10,7 @@ from torch.optim import Adam, SGD
 from torch.utils.data import DataLoader
 
 from dataset import MyData, custom_collate_fn
-from Predict_model import RRCP_Model as my_model
+from predict_model import RRCP_Model as my_model
 import random
 import numpy as np
 from scipy.stats import spearmanr
