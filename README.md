@@ -24,7 +24,8 @@ conda create --name skapp python=3.9
 conda activate skapp
 
 # install other dependencies
-# make sure cuda and pytorch are installed 
+# make sure cuda and pytorch are installed ↓
+pip3 install torch ..... # please refer to https://pytorch.org/ for your specific machine and software conditions
 pip3 install pandas huggingface-hub tqdm scikit-learn transformers angle_emb spacy
 ```
 
@@ -128,6 +129,10 @@ Remember to replace the actual path `model_path`, e.g. `checkpoint_10_epoch.pkl`
 ```shell
 python src/test.py --dataset_id=ICIP --model_id=graph --model_path="PATH"
 ```
+
+### Hyper-Parameters
+
+Please refer to `config.yaml`
 
 ## Citation
 ```bibtex

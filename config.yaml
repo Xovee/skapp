@@ -1,0 +1,51 @@
+ICIP:
+  train_all_item:
+    batch_size: 128
+    early_stop_turns: 10
+    lr: 1e-4
+    retrieval_num: 500
+  train_single_item:
+    batch_size: 1024
+    early_stop_turns: 10
+    lr: 5e-6
+    retrieval_num: 1
+  train:
+    batch_size: 64
+    early_stop_turns: 5
+    lr: 1e-4
+    retrieval_num: 500
+  
+
+SMPD:
+  train_all_item:
+    batch_size: 64
+    early_stop_turns: 10
+    lr: 1e-5
+    retrieval_num: 500
+  train_single_item:
+    batch_size: 256
+    early_stop_turns: 10
+    lr: 1e-5
+    retrieval_num: 1
+  train:
+    batch_size: 64
+    early_stop_turns: 5
+    lr: 1e-4
+    retrieval_num: 500
+
+Instagram:
+  train_all_item:
+    batch_size: 64
+    early_stop_turns: 10
+    lr: 1e-4
+    retrieval_num: 500
+  train_single_item:
+    batch_size: 256
+    early_stop_turns: 10
+    lr: 1e-4
+    retrieval_num: 1
+  train:
+    batch_size: 64
+    early_stop_turns: 5
+    lr: 1e-4
+    retrieval_num: 500
