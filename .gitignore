@@ -1,2 +1,7 @@
 __pycache__/
 .idea/
+datasets/
+*.jpg
+*.txt
+*.pth
+*.pkl

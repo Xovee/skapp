@@ -45,6 +45,8 @@ def disassemble(path, output_path, retrieval_num):
         'retrieved_textual_feature_embedding_list': disassembled_retrieved_textual_feature_embedding_list,
         'retrieved_label_list_list': disassembled_retrieved_label_list_list
     })
+    
+    disassembled_dataset = disassembled_dataset.sample(frac=1, random_state=42).reset_index(drop=True)
 
     disassembled_dataset.to_pickle(output_path)
     print('Disassemble done!')

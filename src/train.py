@@ -1,7 +1,6 @@
 import logging
 import os
-import sys
-import argparse
+import yaml, argparse, sys
 from datetime import datetime
 from tqdm import tqdm
 
@@ -17,6 +16,19 @@ from scipy.stats import spearmanr
 
 BLUE = '\033[94m'
 ENDC = '\033[0m'
+
+
+def load_cfg(dataset_id, mode):
+    with open("config.yaml") as f:
+        all_cfg = yaml.safe_load(f)
+
+    ds_cfg = all_cfg.get(dataset_id)
+    if ds_cfg is None:
+        sys.exit(f"Unknown dataset_id: {dataset_id}")
+    mode_cfg = ds_cfg.get(mode)
+    if mode_cfg is None:
+        sys.exit(f"Unknown mode: {mode} under dataset_id: {dataset_id}")
+    return mode_cfg
 
 
 def seed_init(seed):
@@ -216,6 +228,10 @@ def main():
     parser.add_argument('--threshold_of_RRCP', default=0, type=float)
 
     args = parser.parse_args()
+
+    cfg = load_cfg(args.dataset_id, 'train')
+    for k, v in cfg.items():
+        setattr(args, k, v)
 
     seed_init(args.seed)
     train_val(args)
