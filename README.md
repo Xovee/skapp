@@ -26,7 +26,8 @@ conda activate skapp
 # install other dependencies
 # make sure cuda and pytorch are installed ↓
 pip3 install torch ..... # please refer to https://pytorch.org/ for your specific machine and software conditions
-pip3 install pandas huggingface-hub tqdm scikit-learn transformers angle_emb spacy
+pip3 install pandas huggingface-hub tqdm scikit-learn transformers angle_emb 
+# install spacy: https://spacy.io/usage
 ```
 
 ## Dataset Preparation
@@ -67,7 +68,7 @@ project_root/
 │       │       ├── 1.jpg
 │       │       └── 2.jpg
 │       │
-│       └── INSTAGRAM/
+│       └── Instagram/
 │           ├── json/
 │           │   ├── 1.json
 │           │   └── 2.json
@@ -88,10 +89,10 @@ Run the following commands for preprocessing the datasets. During the preprocess
 
 ```shell
 cd skapp
-python src/preprocess/ICIP/1_build_dataset.py
-python src/preprocess/ICIP/2_preprocess.py
-python src/preprocess/ICIP/3_retrieval.py
-python src/preprocess/ICIP/4_disassemble.py
+python src/preprocess/ICIP/1_build_dataset.py  # about 10 minutes for ICIP
+python src/preprocess/ICIP/2_preprocess.py  # about 5 minutes for ICIP
+python src/preprocess/ICIP/3_retrieval.py  # about 40 minutes for ICIP
+python src/preprocess/ICIP/4_disassemble.py  # about 1 minute for ICIP
 ```
 
 ### Pre-training
