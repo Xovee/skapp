@@ -36,7 +36,7 @@ First, download the datasets:
 
 - ICIP: http://www.visiongarage.altervista.org/popularitydataset/ (invalid) current new download link: https://iplab.dmi.unict.it/popularitydataset/SIPD2020CHALLENGE/train/
 
-- SMPD: https://smp-challenge.com/download.html
+- SMPD: https://smp-challenge.com
 
 - Instagram: https://sites.google.com/site/sbkimcv/dataset/instagram-influencer-dataset
 
@@ -148,6 +148,7 @@ Please refer to `config.yaml`
 ## LICENSE
 
 MIT
+
 
 
 
