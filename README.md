@@ -2,9 +2,9 @@
 
 This repo contains a reference implementation of the SKAPP model described in the following paper:
 
-> Xovee Xu, Yifan Zhang, Fan Zhou, and Jingkuan Song
-> Improving Multimodal Social Media Popularity Prediction via Selective Retrieval Knowledge Augmentation
-> AAAI Conference on Artificial Intelligence, 2025.
+> Xovee Xu, Yifan Zhang, Fan Zhou, and Jingkuan Song  
+> Improving Multimodal Social Media Popularity Prediction via Selective Retrieval Knowledge Augmentation  
+> AAAI Conference on Artificial Intelligence, 2025.  
 
 SKAPP is a multimodal learning framework for social UGCs. It is equipped with a
 meta retriever, a selective refiner, and a knowledge augmentation prediction
