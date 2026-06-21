@@ -83,6 +83,18 @@ def force_stop(msg):
     sys.exit(1)
 
 
+def make_data_loader(dataset, args, device):
+    loader_kwargs = {
+        'batch_size': args.batch_size,
+        'collate_fn': custom_collate_fn,
+        'pin_memory': device.type == 'cuda',
+        'num_workers': args.num_workers,
+    }
+    if args.num_workers > 0:
+        loader_kwargs['persistent_workers'] = True
+    return DataLoader(dataset=dataset, **loader_kwargs)
+
+
 def train_val(args):
 
     father_folder_name, folder_name, logger = make_saving_folder_and_logger(args)
@@ -90,8 +102,8 @@ def train_val(args):
 
     train_data = MyData(args.retrieval_num, os.path.join(args.dataset_path, args.dataset_id, 'train.pkl'))
     valid_data = MyData(args.retrieval_num, os.path.join(os.path.join(args.dataset_path, args.dataset_id, 'valid.pkl')))
-    train_data_loader = DataLoader(dataset=train_data, batch_size=args.batch_size, collate_fn=custom_collate_fn)
-    valid_data_loader = DataLoader(dataset=valid_data, batch_size=args.batch_size, collate_fn=custom_collate_fn)
+    train_data_loader = make_data_loader(train_data, args, device)
+    valid_data_loader = make_data_loader(valid_data, args, device)
     model = my_model(retrieval_num=args.retrieval_num)
     model = model.to(device)
 
@@ -145,7 +157,7 @@ def run_one_epoch(args, model, loss_fn, optim, train_data_loader, valid_data_loa
     total_train_loss = 0.0
     train_sample_count = 0
     for batch in tqdm(train_data_loader, desc='Training Progress'):
-        batch = [item.to(device) if isinstance(item, torch.Tensor) else item for item in batch]
+        batch = [item.to(device, non_blocking=True) if isinstance(item, torch.Tensor) else item for item in batch]
         mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
             retrieved_textual_feature_embedding, retrieved_label_list, label = batch
 
@@ -168,7 +180,7 @@ def run_one_epoch(args, model, loss_fn, optim, train_data_loader, valid_data_loa
     valid_sample_count = 0
     with torch.no_grad():
         for batch in tqdm(valid_data_loader, desc='Validating Progress'):
-            batch = [item.to(device) if isinstance(item, torch.Tensor) else item for item in batch]
+            batch = [item.to(device, non_blocking=True) if isinstance(item, torch.Tensor) else item for item in batch]
 
             mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
                 retrieved_textual_feature_embedding, retrieved_label_list, label = batch
@@ -208,6 +220,7 @@ def main():
 
     parser.add_argument('--retrieval_num', default=500, type=int, help='number of retrieval')
     parser.add_argument('--model_id', default='skapp_all_items', type=str, help='id of model')
+    parser.add_argument('--num_workers', default=0, type=int, help='number of data loading workers')
 
     args = parser.parse_args()
 

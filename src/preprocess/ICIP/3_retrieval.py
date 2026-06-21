@@ -122,20 +122,13 @@ def _stack_features(df_split, df_database):
 
 
 def stack_retrieved_feature(train_path, valid_path, test_path):
-    # stack retrieved features for train, valid, and test sets
-    df_train = pd.read_pickle(train_path)
-    df_valid = pd.read_pickle(valid_path)
-    df_test = pd.read_pickle(test_path)
-    df_database = pd.concat([df_train, df_valid, df_test], axis=0).reset_index(drop=True)
-
-    df_train = _stack_features(df_train, df_database)
-    df_train.to_pickle(train_path)
-
-    df_valid = _stack_features(df_valid, df_database)
-    df_valid.to_pickle(valid_path)
-
-    df_test = _stack_features(df_test, df_database)
-    df_test.to_pickle(test_path)
+    # Retrieved features are now resolved lazily from retrieval_pool.pkl during
+    # training/RRCP generation. Keep a label-list alias for older call sites.
+    for split_path in [train_path, valid_path, test_path]:
+        df_split = pd.read_pickle(split_path)
+        if 'retrieved_label_list' not in df_split.columns and 'retrieved_label' in df_split.columns:
+            df_split['retrieved_label_list'] = df_split['retrieved_label']
+        df_split.to_pickle(split_path)
 
 
 def list2set(path):

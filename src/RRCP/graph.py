@@ -8,22 +8,16 @@ from torch.autograd import Variable
 def graph_norm_ours(A, batch=False, self_loop=True, symmetric=True):
     d = A.sum(-1)
     if symmetric:
-        d = torch.pow(d, -0.5)
+        d = torch.pow(d + 1e-8, -0.5)
         if batch:
-            D = A.detach().clone()
-            for i in range(A.size(0)):
-                D[i] = torch.diag(d[i])
-            norm_A = D.bmm(A).bmm(D)
+            norm_A = A * d.unsqueeze(-1) * d.unsqueeze(-2)
         else:
             D = torch.diag(d)
             norm_A = D.mm(A).mm(D)
     else:
-        d = torch.pow(d,-1)
+        d = torch.pow(d + 1e-8, -1)
         if batch:
-            D = A.detach().clone()
-            for i in range(A.size(0)):
-                D[i] = torch.diag(d[i])
-            norm_A = D.bmm(A)
+            norm_A = A * d.unsqueeze(-1)
         else:
             D =torch.diag(d)
             norm_A = D.mm(A)

@@ -12,20 +12,14 @@ def graph_norm_ours(A, mask, batch=False, self_loop=True, symmetric=True):
     if symmetric:
         d = torch.pow(d + 1e-8, -0.5)
         if batch:
-            D = A.detach().clone()
-            for i in range(A.size(0)):
-                D[i] = torch.diag(d[i])
-            norm_A = D.bmm(A).bmm(D)
+            norm_A = A * d.unsqueeze(-1) * d.unsqueeze(-2)
         else:
             D = torch.diag(d)
             norm_A = D.mm(A).mm(D)
     else:
         d = torch.pow(d + 1e-8, -1)
         if batch:
-            D = A.detach().clone()
-            for i in range(A.size(0)):
-                D[i] = torch.diag(d[i])
-            norm_A = D.bmm(A)
+            norm_A = A * d.unsqueeze(-1)
         else:
             D = torch.diag(d)
             norm_A = D.mm(A)
@@ -126,8 +120,8 @@ class GraphLearner(nn.Module):
 
         graph_o_t = torch.stack(graph_o_t_all, dim=0).transpose(1, 0)
 
-        text_mask_expanded = text_mask[:, :self.class_num].unsqueeze(-1)
-        img_mask_expanded = img_mask[:, :self.class_num].unsqueeze(-1)
+        text_mask_expanded = text_mask[:, 1:self.class_num + 1].unsqueeze(-1)
+        img_mask_expanded = img_mask[:, 1:self.class_num + 1].unsqueeze(-1)
 
         graph_o_t_expanded = graph_o_t.repeat(1, self.class_num, 1)
 

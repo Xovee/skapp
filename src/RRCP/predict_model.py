@@ -10,12 +10,13 @@ class RRCP_Model(nn.Module):
         self.alpha = alpha
         self.feature_dim = feature_dim
         self.retrieval_num = retrieval_num
-        self.predict_linear_1 = nn.Linear(feature_dim * retrieval_num * 2, feature_dim)
+        self.predict_linear_1 = nn.Linear(feature_dim, feature_dim)
         self.predict_linear_2 = nn.Linear(feature_dim * 2, 1)
         self.relu = nn.ReLU()
         self.label_embedding_linear = nn.Linear(retrieval_num, feature_dim)
         self.GraphLearner = GraphLearner(device='cuda:0', hidden_dim=768, class_num=self.retrieval_num)
         self.multihead_attn = nn.MultiheadAttention(embed_dim=feature_dim, num_heads=8,batch_first=True)
+        self.feature_attention = nn.Linear(feature_dim, 1)
 
 
     def forward(self, mean_pooling_vec, merge_text_vec,
@@ -37,7 +38,9 @@ class RRCP_Model(nn.Module):
 
         output = self.multihead_attn(packed_feature, packed_feature, packed_feature)
         values = output[0]
-        output = values.reshape(values.shape[0], -1)
+        attention_score = self.feature_attention(values).squeeze(-1)
+        attention_weight = torch.softmax(attention_score, dim=1).unsqueeze(-1)
+        output = torch.sum(values * attention_weight, dim=1)
         output = self.predict_linear_1(output)
         output = self.relu(output)
         label = self.label_embedding_linear(retrieved_label_list)

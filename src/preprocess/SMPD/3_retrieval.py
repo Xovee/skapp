@@ -97,6 +97,12 @@ def retrieval_data(retrieval_num, data_path, retrieval_pool_path):
 
 
 def stack_retrieved_feature(train_path, valid_path, test_path):
+    for split_path in [train_path, valid_path, test_path]:
+        df_split = pd.read_pickle(split_path)
+        if 'retrieved_label_list' not in df_split.columns and 'retrieved_label' in df_split.columns:
+            df_split['retrieved_label_list'] = df_split['retrieved_label']
+        df_split.to_pickle(split_path)
+    return
 
     df_train = pd.read_pickle(train_path)
 
@@ -286,7 +292,7 @@ if __name__ == "__main__":
     train_path = r'datasets/SMPD/train.pkl'
     valid_path = r'datasets/SMPD/valid.pkl'
     test_path = r'datasets/SMPD/test.pkl'
-    retrieval_pool_path = r'dataset/SMPD/retrieval_pool.pkl'
+    retrieval_pool_path = r'datasets/SMPD/retrieval_pool.pkl'
 
     list2set(dataset_path)
 

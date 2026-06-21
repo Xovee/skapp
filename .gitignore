@@ -1,6 +1,7 @@
 __pycache__/
 .idea/
 datasets/
+run_logs/
 *.jpg
 *.txt
 *.pth
