@@ -19,7 +19,7 @@ class RRCP_Model(nn.Module):
 
 
     def forward(self, mean_pooling_vec, merge_text_vec,
-                retrieved_textual_feature_embedding, retrieved_visual_feature_embedding_cls, retrieved_label_list):
+                retrieved_visual_feature_embedding_cls, retrieved_textual_feature_embedding, retrieved_label_list):
 
         if retrieved_textual_feature_embedding.dim() == 3:
             retrieved_textual_feature_embedding = retrieved_textual_feature_embedding.unsqueeze(2)
