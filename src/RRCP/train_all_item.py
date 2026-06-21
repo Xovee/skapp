@@ -114,23 +114,23 @@ def train_val(args):
 
     decayRate = args.decay_rate
 
-    min_total_valid_loss = 1008611
+    min_valid_loss = 1008611
     min_turn = 0
 
     print_init_msg(logger, args)
     for i in range(args.epochs):
         logger.info(f"-----------------------------------Epoch {i + 1} Start!-----------------------------------")
-        min_train_loss, total_valid_loss = run_one_epoch(args, model, loss_fn, optim, train_data_loader,
-                                                         valid_data_loader,
-                                                         device)
-        logger.info(f"[ Epoch {i + 1} (train) ]: loss = {min_train_loss}")
-        logger.info(f"[ Epoch {i + 1} (valid) ]: total_loss = {total_valid_loss}")
+        train_loss, valid_loss = run_one_epoch(args, model, loss_fn, optim, train_data_loader,
+                                               valid_data_loader,
+                                               device)
+        logger.info(f"[ Epoch {i + 1} (train) ]: avg_loss = {train_loss}")
+        logger.info(f"[ Epoch {i + 1} (valid) ]: avg_loss = {valid_loss}")
 
-        if total_valid_loss < min_total_valid_loss:
-            min_total_valid_loss = total_valid_loss
+        if valid_loss < min_valid_loss:
+            min_valid_loss = valid_loss
             min_turn = i + 1
         logger.critical(
-            f"Current Best Total Loss comes from Epoch {min_turn} , min_total_loss = {min_total_valid_loss}")
+            f"Current Best Valid Loss comes from Epoch {min_turn} , min_valid_loss = {min_valid_loss}")
         torch.save(model, f"{father_folder_name}/{folder_name}/trained_model/model_{i + 1}.pth")
         logger.info("Model has been saved successfully!")
         if (i + 1) - min_turn > args.early_stop_turns:
@@ -142,7 +142,8 @@ def train_val(args):
 def run_one_epoch(args, model, loss_fn, optim, train_data_loader, valid_data_loader, device):
 
     model.train()
-    min_train_loss = 1008611
+    total_train_loss = 0.0
+    train_sample_count = 0
     for batch in tqdm(train_data_loader, desc='Training Progress'):
         batch = [item.to(device) if isinstance(item, torch.Tensor) else item for item in batch]
         mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
@@ -158,11 +159,13 @@ def run_one_epoch(args, model, loss_fn, optim, train_data_loader, valid_data_loa
         optim.zero_grad()
         loss.backward()
         optim.step()
-        if min_train_loss > loss:
-            min_train_loss = loss
+        batch_size = target.size(0)
+        total_train_loss += loss.item() * batch_size
+        train_sample_count += batch_size
 
     model.eval()
-    total_valid_loss = 0
+    total_valid_loss = 0.0
+    valid_sample_count = 0
     with torch.no_grad():
         for batch in tqdm(valid_data_loader, desc='Validating Progress'):
             batch = [item.to(device) if isinstance(item, torch.Tensor) else item for item in batch]
@@ -177,9 +180,11 @@ def run_one_epoch(args, model, loss_fn, optim, train_data_loader, valid_data_loa
 
             loss = loss_fn(output, target)
 
-            total_valid_loss += loss
+            batch_size = target.size(0)
+            total_valid_loss += loss.item() * batch_size
+            valid_sample_count += batch_size
 
-    return min_train_loss, total_valid_loss
+    return total_train_loss / train_sample_count, total_valid_loss / valid_sample_count
 
 
 def main():
