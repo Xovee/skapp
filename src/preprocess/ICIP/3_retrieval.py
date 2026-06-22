@@ -23,11 +23,8 @@ def split_and_save_pkl(input_path, train_path, valid_path, test_path):
 
 
 def create_retrieval_pool(train_path, valid_path, retrieval_pool_path):
-    # merge train and validation data to form a retrieval pool
-    train_data = pd.read_pickle(train_path)
-    valid_data = pd.read_pickle(valid_path)
-
-    retrieval_pool = pd.concat([train_data, valid_data], axis=0)
+    # use the train split only to form the retrieval pool
+    retrieval_pool = pd.read_pickle(train_path).copy()
     retrieval_pool.reset_index(drop=True, inplace=True)
     retrieval_pool.to_pickle(retrieval_pool_path)
 
@@ -68,6 +65,8 @@ def retrieval_data(retrieval_num, data_path, retrieval_pool_path):
 
     dataset_array = dataset[all_features].values
     data_array = data[all_features].values
+    retrieval_ids = dataset['image_id'].astype(str).to_numpy()
+    data_ids = data['image_id'].astype(str).to_numpy()
     N = len(dataset)
 
     retrieved_item_id_list = []
@@ -77,7 +76,7 @@ def retrieval_data(retrieval_num, data_path, retrieval_pool_path):
     for i in tqdm(range(len(data))):
         query_features = data_array[i]
         similarities = calculate_similarity(query_features, dataset_array, N, list_columns)
-        similarities[i] = 0  # avoid self-matching
+        similarities[retrieval_ids == data_ids[i]] = -np.inf
         retrieval_indices = np.argsort(similarities)[::-1][:retrieval_num]
         retrieved_items = dataset.iloc[retrieval_indices]
 

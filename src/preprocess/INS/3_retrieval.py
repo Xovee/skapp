@@ -23,10 +23,7 @@ def split_and_save_pkl(input_path, train_path, valid_path, test_path):
 
 def create_retrieval_pool(train_path, valid_path, retrieval_pool_path):
 
-    train_data = pd.read_pickle(train_path)
-    valid_data = pd.read_pickle(valid_path)
-
-    retrieval_pool = pd.concat([train_data, valid_data], axis=0)
+    retrieval_pool = pd.read_pickle(train_path).copy()
     retrieval_pool.reset_index(drop=True, inplace=True)
 
     retrieval_pool.to_pickle(retrieval_pool_path)
@@ -35,65 +32,65 @@ def create_retrieval_pool(train_path, valid_path, retrieval_pool_path):
 
 
 def calculate_similarity(all_retrieval_result, N):
-    # 计算每个特征值出现的次数
+    # Count how often each feature value appears in the retrieval pool.
     n_values = all_retrieval_result.sum(axis=0)
 
     def f_similarity(n):
-        # 计算相似度
+        # Compute the feature-level similarity weight.
         return np.log((N - n + 0.5) / (n + 0.5))
 
-    # 计算相似度
+    # Compute the final similarity score.
     similarity = np.dot(all_retrieval_result, f_similarity(n_values))
     return similarity
 
+
 def retrieval_data(retrieval_num, data_path, retrieval_pool_path):
-    # 读取数据集和待检索数据
+    # Load the retrieval pool and query split.
     dataset = pd.read_pickle(retrieval_pool_path)
     data = pd.read_pickle(data_path)
 
-    # 获取所有特征列
-    all_features = ["comment_num",'user_id', 'taken_timestamp']
+    # Select metadata fields used for retrieval.
+    all_features = ['comment_num', 'user_id', 'taken_timestamp']
 
-    # 转换为 Numpy 数组，以便进行高效的向量化操作
+    # Convert fields to NumPy arrays for vectorized matching.
     dataset_array = dataset[all_features].values
     data_array = data[all_features].values
+    retrieval_ids = dataset['image_id'].astype(str).to_numpy()
+    data_ids = data['image_id'].astype(str).to_numpy()
 
-    # 计算数据集大小
+    # Record retrieval pool size.
     N = len(dataset)
 
-    # 存储检索结果的列表
+    # Store retrieved items, scores, and labels.
     retrieved_item_id_list = []
     retrieved_item_similarity_list = []
     retrieved_label_list = []
 
-    # 遍历待检索数据
+    # Retrieve neighbors for each query item.
     for i in tqdm(range(len(data))):
-        # 获取查询特征向量
+        # Get query metadata features.
         query_features = data_array[i]
 
-        # 计算相似度
+        # Compute metadata similarity.
         similarities = calculate_similarity((dataset_array == query_features).astype(int), N)
+        similarities[retrieval_ids == data_ids[i]] = -np.inf
 
-        # 将自身相似度置为0
-        similarities[i] = 0
-
-        # 获取相似度排序后的索引
+        # Select top-ranked retrieval indices.
         retrieval_indices = np.argsort(similarities)[::-1][:retrieval_num]
         retrieved_items = dataset.iloc[retrieval_indices]
 
-        # 提取检索结果的相关信息，并存储到列表中
+        # Save retrieved item metadata.
         retrieved_item_id_list.append(retrieved_items['image_id'].tolist())
         retrieved_item_similarity_list.append(similarities[retrieval_indices].tolist())
         retrieved_label_list.append(retrieved_items['label'].tolist())
 
-    # 将检索结果存储到待检索数据中
+    # Attach retrieval results to the query split.
     data['retrieved_item_id'] = retrieved_item_id_list
     data['retrieved_item_similarity'] = retrieved_item_similarity_list
     data['retrieved_label'] = retrieved_label_list
 
-    # 存储结果到文件
+    # Save retrieval results.
     data.to_pickle(data_path)
-
 
 def stack_retrieved_feature(train_path, valid_path, test_path):
     for split_path in [train_path, valid_path, test_path]:
