@@ -94,7 +94,7 @@ def image2vec(meta_file_path, image_path):
 
     cls_vec_list = []
 
-    batch_size = 1000  # 设置批量大小
+    batch_size = 1000  # batch size
 
     for i in tqdm(range(0, len(pic_name_list), batch_size)):
 

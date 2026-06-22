@@ -5,16 +5,26 @@ from pathlib import Path
 
 
 def custom_collate_fn(batch):
-    mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
-        retrieved_textual_feature_embedding, retrieved_label_list, RRCP, label = zip(*batch)
+    if len(batch[0]) == 8:
+        mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
+            retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata, label = zip(*batch)
+    else:
+        mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
+            retrieved_textual_feature_embedding, retrieved_label_list, RRCP, label = zip(*batch)
+        metadata = None
 
-    return torch.from_numpy(np.asarray(mean_pooling_vec, dtype=np.float32)), \
+    tensors = torch.from_numpy(np.asarray(mean_pooling_vec, dtype=np.float32)), \
         torch.from_numpy(np.asarray(merge_text_vec, dtype=np.float32)), \
         torch.from_numpy(np.asarray(retrieved_visual_feature_embedding_cls, dtype=np.float32)), \
         torch.from_numpy(np.asarray(retrieved_textual_feature_embedding, dtype=np.float32)), \
         torch.from_numpy(np.asarray(retrieved_label_list, dtype=np.float32)), \
-        torch.from_numpy(np.asarray(RRCP, dtype=np.float32)), \
-        torch.from_numpy(np.asarray(label, dtype=np.float32)).unsqueeze(-1)
+        torch.from_numpy(np.asarray(RRCP, dtype=np.float32))
+
+    if metadata is not None:
+        tensors += (torch.from_numpy(np.asarray(metadata, dtype=np.float32)),)
+
+    tensors += (torch.from_numpy(np.asarray(label, dtype=np.float32)).unsqueeze(-1),)
+    return tensors
 
 
 def _stack_feature(series):
@@ -39,13 +49,54 @@ def _retrieved_labels(dataframe):
     return np.asarray(dataframe[label_column].tolist(), dtype=np.float32)
 
 
+def _resolve_metadata_fields(dataframe, fields):
+    lookup = {column.lower(): column for column in dataframe.columns}
+    aliases = {'meanviews': 'mean_views'}
+    resolved_fields = []
+
+    for field in fields:
+        if field in dataframe.columns:
+            resolved_fields.append(field)
+            continue
+
+        normalized = field.lower().replace('_', '')
+        alias = aliases.get(normalized)
+        if alias in dataframe.columns:
+            resolved_fields.append(alias)
+            continue
+
+        matched_column = lookup.get(field.lower())
+        if matched_column is not None:
+            resolved_fields.append(matched_column)
+            continue
+
+        raise KeyError(f'Metadata field not found in dataset: {field}')
+
+    return resolved_fields
+
+
+def _build_metadata_matrix(dataframe, fields, transform):
+    resolved_fields = _resolve_metadata_fields(dataframe, fields)
+    metadata = dataframe[resolved_fields].apply(pd.to_numeric, errors='coerce').fillna(0.0)
+    values = metadata.to_numpy(dtype=np.float32)
+
+    if transform == 'log1p':
+        values = np.log1p(np.maximum(values, 0.0)).astype(np.float32)
+    elif transform != 'none':
+        raise ValueError(f'Unsupported metadata_transform: {transform}')
+
+    return values
+
+
 class MyData(torch.utils.data.Dataset):
 
-    def __init__(self, retrieval_num, path):
+    def __init__(self, retrieval_num, path, metadata_fields=None, metadata_transform='none'):
         super().__init__()
 
         self.path = Path(path)
         self.retrieval_num = int(retrieval_num)
+        self.metadata_fields = metadata_fields or []
+        self.metadata_transform = metadata_transform
         self.dataframe = pd.read_pickle(self.path)
         self.length = len(self.dataframe)
         self.label = self.dataframe['label'].to_numpy(dtype=np.float32)
@@ -53,6 +104,9 @@ class MyData(torch.utils.data.Dataset):
         self.merge_text_vec = _stack_feature(self.dataframe['merged_text_vec'])
         self.retrieval_label_list = _retrieved_labels(self.dataframe)
         self.RRCP = np.asarray(self.dataframe['RRCP_silver'].tolist(), dtype=np.float32)
+        self.metadata = None
+        if self.metadata_fields:
+            self.metadata = _build_metadata_matrix(self.dataframe, self.metadata_fields, self.metadata_transform)
         self.use_feature_bank = self._init_feature_bank()
 
         if not self.use_feature_bank:
@@ -92,8 +146,11 @@ class MyData(torch.utils.data.Dataset):
         retrieved_label_list = self.retrieval_label_list[item][:self.retrieval_num]
         RRCP = self.RRCP[item][:self.retrieval_num]
 
-        return mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
+        sample = mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
             retrieved_textual_feature_embedding, retrieved_label_list, RRCP, label
+        if self.metadata is not None:
+            sample = sample[:-1] + (self.metadata[item], label)
+        return sample
 
     def __len__(self):
         return self.length

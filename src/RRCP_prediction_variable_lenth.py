@@ -7,11 +7,11 @@ import time
 
 class RRCP_prediction(nn.Module):
 
-    def __init__(self, retrieval_num, threshold_of_RRCP, alpha=0.5, frame_num=1, feature_dim=768):
+    def __init__(self, retrieval_num, threshold_of_RRCP, alpha=0.5, frame_num=1, feature_dim=768, metadata_dim=0):
         super(RRCP_prediction, self).__init__()
         self.retrieval_num = retrieval_num
         self.threshold_of_RRCP = threshold_of_RRCP
-        self.graph_attention = graph_attention(retrieval_num, alpha, frame_num, feature_dim)
+        self.graph_attention = graph_attention(retrieval_num, alpha, frame_num, feature_dim, metadata_dim)
 
     def preprocess_data(self, base_text_features, base_img_features, input_text, input_img, RRCP):
         device = base_text_features.device
@@ -24,7 +24,7 @@ class RRCP_prediction(nn.Module):
         return base_text_features, base_img_features, input_text, input_img, text_mask, img_mask
 
     def forward(self, mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls,
-                retrieved_textual_feature_embedding, retrieved_label_list, RRCP):
+                retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata=None):
         retrieved_visual_feature_embedding_cls = retrieved_visual_feature_embedding_cls.squeeze(2)
         retrieved_textual_feature_embedding = retrieved_textual_feature_embedding.squeeze(2)
 
@@ -47,6 +47,6 @@ class RRCP_prediction(nn.Module):
         output = self.graph_attention(retrieved_label_list,
                                       mean_pooling_vec, merge_text_vec,
                                       retrieved_visual_feature_embedding_cls,
-                                      retrieved_textual_feature_embedding, text_mask, img_mask, RRCP)
+                                      retrieved_textual_feature_embedding, text_mask, img_mask, RRCP, metadata)
 
         return output

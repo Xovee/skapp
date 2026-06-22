@@ -16,6 +16,9 @@ from scipy.stats import spearmanr
 
 BLUE = '\033[94m'
 ENDC = '\033[0m'
+DEFAULT_METADATA_FIELDS = {
+    'ICIP': ['mean_views'],
+}
 
 
 def load_cfg(dataset_id, mode):
@@ -44,6 +47,33 @@ def apply_cfg(parser, args, cfg):
         setattr(args, key, value)
 
 
+def parse_metadata_fields(value):
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return [str(field).strip() for field in value if str(field).strip()]
+    return [field.strip() for field in str(value).split(',') if field.strip()]
+
+
+def resolve_metadata_fields(args):
+    if args.metadata_fields is None:
+        args.metadata_fields = DEFAULT_METADATA_FIELDS.get(args.dataset_id, [])
+    return args.metadata_fields
+
+
+def unpack_batch(batch):
+    if len(batch) == 8:
+        mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
+            retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata, label = batch
+    else:
+        mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
+            retrieved_textual_feature_embedding, retrieved_label_list, RRCP, label = batch
+        metadata = None
+
+    return mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
+        retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata, label
+
+
 def seed_init(seed):
     seed = int(seed)
     random.seed(seed)
@@ -69,6 +99,7 @@ def print_init_msg(logger, args):
     logger.info(BLUE + "Early Stop: " + ENDC + f"{args.early_stop_turns} Turns")
     logger.info(BLUE + "Batch Size: " + ENDC + f"{args.batch_size}")
     logger.info(BLUE + "Threshold of RRCP: " + ENDC + f"{args.threshold_of_RRCP}")
+    logger.info(BLUE + "Metadata Fields: " + ENDC + f"{args.metadata_fields}")
     logger.info(BLUE + "Training Starts!" + ENDC)
 
 
@@ -131,12 +162,26 @@ def train_val(args):
 
     device = torch.device(args.device)
 
-    train_data = MyData(args.retrieval_num, os.path.join(args.dataset_path, args.dataset_id, 'train.pkl'))
-    valid_data = MyData(args.retrieval_num, os.path.join(os.path.join(args.dataset_path, args.dataset_id, 'valid.pkl')))
+    train_data = MyData(
+        args.retrieval_num,
+        os.path.join(args.dataset_path, args.dataset_id, 'train.pkl'),
+        metadata_fields=args.metadata_fields,
+        metadata_transform=args.metadata_transform,
+    )
+    valid_data = MyData(
+        args.retrieval_num,
+        os.path.join(os.path.join(args.dataset_path, args.dataset_id, 'valid.pkl')),
+        metadata_fields=args.metadata_fields,
+        metadata_transform=args.metadata_transform,
+    )
     train_data_loader = make_data_loader(train_data, args, device)
     valid_data_loader = make_data_loader(valid_data, args, device)
 
-    model = my_model(retrieval_num=args.retrieval_num, threshold_of_RRCP=args.threshold_of_RRCP)
+    model = my_model(
+        retrieval_num=args.retrieval_num,
+        threshold_of_RRCP=args.threshold_of_RRCP,
+        metadata_dim=len(args.metadata_fields),
+    )
     model = model.to(device)
 
     if args.loss == 'BCE':
@@ -197,12 +242,12 @@ def run_one_epoch(args, model, loss_fn, optim, train_data_loader, valid_data_loa
     for batch in tqdm(train_data_loader, desc='Training Progress'):
         batch = [item.to(device, non_blocking=True) if isinstance(item, torch.Tensor) else item for item in batch]
         mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
-            retrieved_textual_feature_embedding, retrieved_label_list, RRCP, label = batch
+            retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata, label = unpack_batch(batch)
 
         target = label.type(torch.float32)
 
         output = model.forward(mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls,
-                retrieved_textual_feature_embedding, retrieved_label_list, RRCP)
+                retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata)
 
         loss = loss_fn(output, target)
 
@@ -221,12 +266,12 @@ def run_one_epoch(args, model, loss_fn, optim, train_data_loader, valid_data_loa
             batch = [item.to(device, non_blocking=True) if isinstance(item, torch.Tensor) else item for item in batch]
 
             mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
-                retrieved_textual_feature_embedding, retrieved_label_list, RRCP, label = batch
+                retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata, label = unpack_batch(batch)
 
             target = label.type(torch.float32)
 
             output = model.forward(mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls,
-                                   retrieved_textual_feature_embedding, retrieved_label_list, RRCP)
+                                   retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata)
 
             loss = loss_fn(output, target)
 
@@ -258,11 +303,16 @@ def main():
     parser.add_argument('--model_id', default='SKAPP', type=str, help='id of model')
     parser.add_argument('--threshold_of_RRCP', default=0, type=float)
     parser.add_argument('--num_workers', default=0, type=int, help='number of data loading workers')
+    parser.add_argument('--metadata_fields', default=None, type=parse_metadata_fields,
+                        help='comma-separated metadata fields to use as additional predictors')
+    parser.add_argument('--metadata_transform', default='none', choices=['none', 'log1p'],
+                        help='transform applied to metadata fields')
 
     args = parser.parse_args()
 
     cfg = load_cfg(args.dataset_id, 'train')
     apply_cfg(parser, args, cfg)
+    resolve_metadata_fields(args)
 
     seed_init(args.seed)
     train_val(args)

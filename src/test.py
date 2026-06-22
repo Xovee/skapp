@@ -15,6 +15,37 @@ from RRCP_prediction_variable_lenth import RRCP_prediction as my_model
 
 BLUE = '\033[94m'
 ENDC = '\033[0m'
+DEFAULT_METADATA_FIELDS = {
+    'ICIP': ['mean_views'],
+}
+
+
+def parse_metadata_fields(value):
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return [str(field).strip() for field in value if str(field).strip()]
+    return [field.strip() for field in str(value).split(',') if field.strip()]
+
+
+def resolve_metadata_fields(args):
+    if args.metadata_fields is None:
+        args.metadata_fields = DEFAULT_METADATA_FIELDS.get(args.dataset_id, [])
+    return args.metadata_fields
+
+
+def unpack_batch(batch):
+    if len(batch) == 8:
+        mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
+            retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata, label = batch
+    else:
+        mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
+            retrieved_textual_feature_embedding, retrieved_label_list, RRCP, label = batch
+        metadata = None
+
+    return mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
+        retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata, label
+
 
 def seed_init(seed):
     seed = int(seed)
@@ -34,6 +65,7 @@ def print_init_msg(logger, args):
     logger.info(BLUE + 'Model: ' + ENDC + f"{args.model_path} ")
     logger.info(BLUE + "Dataset: " + ENDC + f"{args.dataset_id}")
     logger.info(BLUE + "Metric: " + ENDC + f"{args.metric}")
+    logger.info(BLUE + "Metadata Fields: " + ENDC + f"{args.metadata_fields}")
     logger.info(BLUE + "Testing Starts!" + ENDC)
 
 
@@ -69,10 +101,19 @@ def test(args):
     file_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
-    test_data = MyData(args.retrieval_num, os.path.join(os.path.join(args.dataset_path, args.dataset_id, 'test.pkl')))
+    test_data = MyData(
+        args.retrieval_num,
+        os.path.join(os.path.join(args.dataset_path, args.dataset_id, 'test.pkl')),
+        metadata_fields=args.metadata_fields,
+        metadata_transform=args.metadata_transform,
+    )
     test_data_loader = DataLoader(dataset=test_data, batch_size=args.batch_size, collate_fn=custom_collate_fn)
 
-    model = my_model(retrieval_num=args.retrieval_num, threshold_of_RRCP=args.threshold_of_RRCP)
+    model = my_model(
+        retrieval_num=args.retrieval_num,
+        threshold_of_RRCP=args.threshold_of_RRCP,
+        metadata_dim=len(args.metadata_fields),
+    )
     model = model.to(device)
     checkpoint = torch.load(args.model_path, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
@@ -88,12 +129,12 @@ def test(args):
             batch = [item.to(device) if isinstance(item, torch.Tensor) else item for item in batch]
 
             mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
-                retrieved_textual_feature_embedding, retrieved_label_list, RRCP, label = batch
+                retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata, label = unpack_batch(batch)
 
             label = label.type(torch.float32)
 
             output = model.forward(mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
-                                   retrieved_textual_feature_embedding, retrieved_label_list, RRCP)
+                                   retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata)
 
             output = output.to('cpu')
             label = label.to('cpu')
@@ -116,6 +157,7 @@ def test(args):
 
 def main(args):
     seed_init(args.seed)
+    resolve_metadata_fields(args)
     test(args)
 
 
@@ -135,6 +177,10 @@ if __name__ == "__main__":
                         default=r"",
                         type=str, help='path of trained model')
     parser.add_argument('--threshold_of_RRCP', default=0, type=float)
+    parser.add_argument('--metadata_fields', default=None, type=parse_metadata_fields,
+                        help='comma-separated metadata fields used during training')
+    parser.add_argument('--metadata_transform', default='none', choices=['none', 'log1p'],
+                        help='transform applied to metadata fields')
     args = parser.parse_args()
 
     main(args)

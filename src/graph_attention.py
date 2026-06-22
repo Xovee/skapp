@@ -7,12 +7,13 @@ from graph_variable_length import GraphLearner
 
 class Model(nn.Module):
 
-    def __init__(self, retrieval_num ,alpha=0.5, frame_num=1, feature_dim=768):
+    def __init__(self, retrieval_num, alpha=0.5, frame_num=1, feature_dim=768, metadata_dim=0):
 
         super(Model, self).__init__()
         self.alpha = alpha
         self.frame_num = frame_num
         self.feature_dim = feature_dim
+        self.metadata_dim = int(metadata_dim)
 
         self.visual_embedding = nn.Linear(feature_dim, feature_dim)
         self.textual_embedding = nn.Linear(feature_dim, feature_dim)
@@ -38,7 +39,15 @@ class Model(nn.Module):
         self.retrieval_uni_modal_linear_2 = nn.Linear(feature_dim, 1)
 
         self.predict_linear_1 = nn.Linear(feature_dim, feature_dim)
-        self.predict_linear_2 = nn.Linear(feature_dim * 2, 1)
+        self.metadata_embedding = None
+        metadata_feature_dim = 0
+        if self.metadata_dim > 0:
+            metadata_feature_dim = feature_dim
+            self.metadata_embedding = nn.Sequential(
+                nn.Linear(self.metadata_dim, feature_dim),
+                nn.ReLU(),
+            )
+        self.predict_linear_2 = nn.Linear(feature_dim * 2 + metadata_feature_dim, 1)
 
         self.label_embedding_linear = nn.Linear(retrieval_num, feature_dim)
 
@@ -49,7 +58,7 @@ class Model(nn.Module):
     def forward(self, retrieved_label_list,
                 mean_pooling_vec,merge_text_vec,
                 retrieved_visual_feature_embedding_cls,
-                retrieved_textual_feature_embedding, text_mask, img_mask, CXMI):
+                retrieved_textual_feature_embedding, text_mask, img_mask, CXMI, metadata=None):
 
         textual_feature_emb, visual_feature_emb = self.graph(merge_text_vec, mean_pooling_vec,
                                                                      retrieved_textual_feature_embedding,
@@ -68,6 +77,10 @@ class Model(nn.Module):
         label = self.label_embedding_linear(retrieved_label_list)
 
         output = torch.cat([output, label], dim=1)
+        if self.metadata_embedding is not None:
+            if metadata is None:
+                raise ValueError('metadata is required when metadata_dim > 0')
+            output = torch.cat([output, self.metadata_embedding(metadata)], dim=1)
         output = self.predict_linear_2(output)
 
         return output
