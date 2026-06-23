@@ -36,19 +36,18 @@ pip3 install pandas huggingface-hub tqdm scikit-learn transformers angle_emb
 
 First, download the datasets:
 
-- ICIP: http://www.visiongarage.altervista.org/popularitydataset/ (invalid);
-  current download link:
-  https://iplab.dmi.unict.it/popularitydataset/SIPD2020CHALLENGE/train/
+- ICIP: the original link (http://www.visiongarage.altervista.org/popularitydataset/) is currently unavailable.
+  A read-only copy of the raw dataset is available on [Google Drive](https://drive.google.com/drive/folders/1eToci8-r0_E-zUuvbqSnAPkmO8aHvm67?usp=sharing) for academic research only.
 - SMPD: https://smp-challenge.com
 - Instagram: https://sites.google.com/site/sbkimcv/dataset/instagram-influencer-dataset
 
-Then place the datasets in the corresponding `dataset/raw_dataset/` folder.
+Then place the datasets in the corresponding `datasets/raw_dataset/` folder.
 
 The storage format of the dataset is as follows:
 
 ```text
 project_root/
-dataset/
+datasets/
   raw_dataset/
     ICIP/
       headers_TRAIN.csv
