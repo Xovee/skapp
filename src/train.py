@@ -19,6 +19,9 @@ ENDC = '\033[0m'
 DEFAULT_METADATA_FIELDS = {
     'ICIP': ['mean_views'],
 }
+DEFAULT_METADATA_TRANSFORMS = {
+    'ICIP': 'log1p',
+}
 
 
 def load_cfg(dataset_id, mode):
@@ -58,6 +61,10 @@ def parse_metadata_fields(value):
 def resolve_metadata_fields(args):
     if args.metadata_fields is None:
         args.metadata_fields = DEFAULT_METADATA_FIELDS.get(args.dataset_id, [])
+        if args.metadata_transform is None:
+            args.metadata_transform = DEFAULT_METADATA_TRANSFORMS.get(args.dataset_id, 'none')
+    elif args.metadata_transform is None:
+        args.metadata_transform = 'none'
     return args.metadata_fields
 
 
@@ -305,7 +312,7 @@ def main():
     parser.add_argument('--num_workers', default=0, type=int, help='number of data loading workers')
     parser.add_argument('--metadata_fields', default=None, type=parse_metadata_fields,
                         help='comma-separated metadata fields to use as additional predictors')
-    parser.add_argument('--metadata_transform', default='none', choices=['none', 'log1p'],
+    parser.add_argument('--metadata_transform', default=None, choices=['none', 'log1p'],
                         help='transform applied to metadata fields')
 
     args = parser.parse_args()
