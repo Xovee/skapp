@@ -107,6 +107,7 @@ def print_init_msg(logger, args):
     logger.info(BLUE + "Batch Size: " + ENDC + f"{args.batch_size}")
     logger.info(BLUE + "Threshold of RRCP: " + ENDC + f"{args.threshold_of_RRCP}")
     logger.info(BLUE + "Metadata Fields: " + ENDC + f"{args.metadata_fields}")
+    logger.info(BLUE + "Metadata Transform: " + ENDC + f"{args.metadata_transform}")
     logger.info(BLUE + "Training Starts!" + ENDC)
 
 

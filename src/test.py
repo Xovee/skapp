@@ -73,6 +73,7 @@ def print_init_msg(logger, args):
     logger.info(BLUE + "Dataset: " + ENDC + f"{args.dataset_id}")
     logger.info(BLUE + "Metric: " + ENDC + f"{args.metric}")
     logger.info(BLUE + "Metadata Fields: " + ENDC + f"{args.metadata_fields}")
+    logger.info(BLUE + "Metadata Transform: " + ENDC + f"{args.metadata_transform}")
     logger.info(BLUE + "Testing Starts!" + ENDC)
 
 
@@ -143,10 +144,8 @@ def test(args):
             output = model.forward(mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
                                    retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata)
 
-            output = output.to('cpu')
-            label = label.to('cpu')
-            output = np.array(output)
-            label = np.array(label)
+            output = output.detach().cpu().numpy()
+            label = label.detach().cpu().numpy()
 
             MAE = mean_absolute_error(label, output)
             SRC, _ = spearmanr(output, label)
