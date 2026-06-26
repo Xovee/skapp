@@ -100,8 +100,16 @@ def train_val(args):
     father_folder_name, folder_name, logger = make_saving_folder_and_logger(args)
     device = torch.device(args.device)
 
-    train_data = MyData(args.retrieval_num, os.path.join(args.dataset_path, args.dataset_id, 'train.pkl'))
-    valid_data = MyData(args.retrieval_num, os.path.join(os.path.join(args.dataset_path, args.dataset_id, 'valid.pkl')))
+    train_data = MyData(
+        args.retrieval_num,
+        os.path.join(args.dataset_path, args.dataset_id, 'train.pkl'),
+        single_item_seed=args.seed,
+    )
+    valid_data = MyData(
+        args.retrieval_num,
+        os.path.join(os.path.join(args.dataset_path, args.dataset_id, 'valid.pkl')),
+        single_item_seed=args.seed,
+    )
     train_data_loader = make_data_loader(train_data, args, device)
     valid_data_loader = make_data_loader(valid_data, args, device)
     model = my_model(retrieval_num=args.retrieval_num)

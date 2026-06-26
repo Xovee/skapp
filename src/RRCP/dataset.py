@@ -2,6 +2,7 @@ import torch.utils.data
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from math import gcd
 
 
 def custom_collate_fn(batch):
@@ -20,17 +21,46 @@ def _stack_feature(series):
     return np.asarray(series.tolist(), dtype=np.float32)
 
 
-def _build_retrieval_indices(id_lists, retrieval_pool_ids, retrieval_num):
-    id_array = np.asarray([item_ids[:retrieval_num] for item_ids in id_lists], dtype=object)
+def _build_retrieval_indices(id_lists, retrieval_pool_ids, retrieval_num, chunk_rows=4096):
     pool_ids = pd.Index(retrieval_pool_ids)
-    pool_positions = pd.Series(np.arange(len(pool_ids)), index=pool_ids)
+    pool_positions = pd.Series(np.arange(len(pool_ids), dtype=np.int64), index=pool_ids)
     pool_positions = pool_positions[~pool_positions.index.duplicated(keep='last')]
-    flat_indices = pool_positions.reindex(id_array.reshape(-1)).to_numpy()
-    missing_mask = pd.isna(flat_indices)
-    if missing_mask.any():
-        missing_id = id_array.reshape(-1)[np.where(missing_mask)[0][0]]
-        raise KeyError(f'Retrieved item id not found in retrieval_pool.pkl: {missing_id}')
-    return flat_indices.reshape(id_array.shape).astype(np.int64, copy=False)
+
+    dtype = np.int32 if len(pool_positions) <= np.iinfo(np.int32).max else np.int64
+    retrieval_indices = np.empty((len(id_lists), retrieval_num), dtype=dtype)
+
+    for start in range(0, len(id_lists), chunk_rows):
+        end = min(start + chunk_rows, len(id_lists))
+        chunk = []
+        for row_index, item_ids in enumerate(id_lists[start:end], start=start):
+            if len(item_ids) < retrieval_num:
+                raise ValueError(
+                    f'Retrieved item list at row {row_index} has length {len(item_ids)}, '
+                    f'but retrieval_num={retrieval_num}'
+                )
+            chunk.append(item_ids[:retrieval_num])
+
+        id_array = np.asarray(chunk, dtype=object)
+        flat_indices = pool_positions.reindex(id_array.reshape(-1)).to_numpy()
+        missing_mask = pd.isna(flat_indices)
+        if missing_mask.any():
+            missing_id = id_array.reshape(-1)[np.where(missing_mask)[0][0]]
+            raise KeyError(f'Retrieved item id not found in retrieval_pool.pkl: {missing_id}')
+        retrieval_indices[start:end] = flat_indices.reshape(id_array.shape).astype(dtype, copy=False)
+
+    return retrieval_indices
+
+
+def _lazy_permutation_params(size, seed):
+    if size <= 1:
+        return 1, 0
+
+    stride = size // 2 + 1 + (int(seed) % 997)
+    if stride % 2 == 0:
+        stride += 1
+    while gcd(stride, size) != 1:
+        stride += 2
+    return stride % size, int(seed) % size
 
 
 def _retrieved_labels(dataframe):
@@ -40,11 +70,12 @@ def _retrieved_labels(dataframe):
 
 class MyData(torch.utils.data.Dataset):
 
-    def __init__(self, retrieval_num, path):
+    def __init__(self, retrieval_num, path, single_item_seed=42):
         super().__init__()
 
         self.path = Path(path)
         self.retrieval_num = int(retrieval_num)
+        self.single_item_seed = int(single_item_seed)
         self.dynamic_single_item = False
 
         if self._init_dynamic_single_item():
@@ -89,9 +120,8 @@ class MyData(torch.utils.data.Dataset):
             self.retrieval_visual_feature_embedding_cls = self.dataframe['retrieved_visual_feature_embedding_cls']
             self.retrieval_textual_feature_embedding = self.dataframe['retrieved_textual_feature_embedding']
 
-        self.order = np.arange(len(self.dataframe) * self.source_retrieval_num, dtype=np.int64)
-        np.random.RandomState(42).shuffle(self.order)
-        self.length = len(self.order)
+        self.length = len(self.dataframe) * self.source_retrieval_num
+        self.order_stride, self.order_offset = _lazy_permutation_params(self.length, self.single_item_seed)
         self.dataframe = None
         return True
 
@@ -117,7 +147,7 @@ class MyData(torch.utils.data.Dataset):
 
     def __getitem__(self, item):
         if self.dynamic_single_item:
-            flat_index = self.order[item]
+            flat_index = (int(item) * self.order_stride + self.order_offset) % self.length
             row = flat_index // self.source_retrieval_num
             retrieval_idx = flat_index % self.source_retrieval_num
             label = self.label[row]
