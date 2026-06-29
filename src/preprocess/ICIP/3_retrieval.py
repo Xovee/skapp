@@ -1,4 +1,5 @@
 import time
+import argparse
 
 import numpy as np
 import pandas as pd
@@ -140,7 +141,14 @@ def list2set(path):
     return data
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Split ICIP and retrieve top-K train-pool neighbors.")
+    parser.add_argument("--retrieval_num", default=50, type=int, help="Number of retrieved UGCs per query")
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
     start_time = time.time()
 
     dataset_path = r'datasets/ICIP/dataset.pkl'
@@ -156,9 +164,9 @@ def main():
     create_retrieval_pool(train_path, valid_path, retrieval_pool_path)
     print('[2] Create retrieval pool complete.')
 
-    retrieval_data(500, train_path, retrieval_pool_path)
-    retrieval_data(500, valid_path, retrieval_pool_path)
-    retrieval_data(500, test_path, retrieval_pool_path)
+    retrieval_data(args.retrieval_num, train_path, retrieval_pool_path)
+    retrieval_data(args.retrieval_num, valid_path, retrieval_pool_path)
+    retrieval_data(args.retrieval_num, test_path, retrieval_pool_path)
     print('[3] Retrieval data complete.')
 
     stack_retrieved_feature(train_path, valid_path, test_path)

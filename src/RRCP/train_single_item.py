@@ -41,7 +41,9 @@ def print_init_msg(logger, args):
     logger.info(BLUE + "Optimizer: " + ENDC + f"{args.optim}(lr = {args.lr})")
     logger.info(BLUE + "Total Epoch: " + ENDC + f"{args.epochs} Turns")
     logger.info(BLUE + "Retrieval Num: " + ENDC + f"{args.retrieval_num}")
+    logger.info(BLUE + "Single-item Retrieval Limit: " + ENDC + f"{args.single_item_retrieval_limit}")
     logger.info(BLUE + "Early Stop: " + ENDC + f"{args.early_stop_turns} Turns")
+    logger.info(BLUE + "Early Stop Min Delta: " + ENDC + f"{args.early_stop_min_delta}")
     logger.info(BLUE + "Batch Size: " + ENDC + f"{args.batch_size}")
     logger.info(BLUE + "Training Starts!" + ENDC)
 
@@ -83,6 +85,10 @@ def force_stop(msg):
     sys.exit(1)
 
 
+def has_meaningful_improvement(valid_loss, min_valid_loss, min_delta):
+    return valid_loss < min_valid_loss - max(float(min_delta), 0.0)
+
+
 def make_data_loader(dataset, args, device):
     loader_kwargs = {
         'batch_size': args.batch_size,
@@ -104,11 +110,13 @@ def train_val(args):
         args.retrieval_num,
         os.path.join(args.dataset_path, args.dataset_id, 'train.pkl'),
         single_item_seed=args.seed,
+        single_item_retrieval_limit=args.single_item_retrieval_limit,
     )
     valid_data = MyData(
         args.retrieval_num,
         os.path.join(os.path.join(args.dataset_path, args.dataset_id, 'valid.pkl')),
         single_item_seed=args.seed,
+        single_item_retrieval_limit=args.single_item_retrieval_limit,
     )
     train_data_loader = make_data_loader(train_data, args, device)
     valid_data_loader = make_data_loader(valid_data, args, device)
@@ -146,14 +154,24 @@ def train_val(args):
         logger.info(f"[ Epoch {i + 1} (train) ]: avg_loss = {train_loss}")
         logger.info(f"[ Epoch {i + 1} (valid) ]: avg_loss = {valid_loss}")
 
-        if valid_loss < min_valid_loss:
+        if has_meaningful_improvement(valid_loss, min_valid_loss, args.early_stop_min_delta):
             min_valid_loss = valid_loss
             min_turn = i + 1
+        else:
+            improvement = min_valid_loss - valid_loss
+            logger.info(
+                f"Validation improvement {improvement} is smaller than "
+                f"early_stop_min_delta={args.early_stop_min_delta}"
+            )
         logger.critical(
             f"Current Best Valid Loss comes from Epoch {min_turn} , min_valid_loss = {min_valid_loss}")
         torch.save(model, f"{father_folder_name}/{folder_name}/trained_model/model_{i + 1}.pth")
         logger.info("Model has been saved successfully!")
-        if (i + 1) - min_turn > args.early_stop_turns:
+        if (i + 1) - min_turn >= args.early_stop_turns:
+            logger.info(
+                f"Early stopping at epoch {i + 1}: validation loss has not improved by at least "
+                f"{args.early_stop_min_delta} for {args.early_stop_turns} epochs."
+            )
             break
     delete_model(father_folder_name, folder_name, min_turn)
     logger.info(BLUE + "Training is ended!" + ENDC)
@@ -215,9 +233,11 @@ def main():
     parser.add_argument('--metric', default='MSE', type=str, help='the judgement of the training')
     parser.add_argument('--save', default=r'./saved_models/', type=str,
                         help='folder to save the results')
-    parser.add_argument('--epochs', default=1000, type=int, help='max number of training epochs')
+    parser.add_argument('--epochs', default=30, type=int, help='max number of training epochs')
     parser.add_argument('--batch_size', default=1024, type=int, help='training batch size')
-    parser.add_argument('--early_stop_turns', default=10, type=int, help='early stop turns of training')
+    parser.add_argument('--early_stop_turns', default=5, type=int, help='early stop turns of training')
+    parser.add_argument('--early_stop_min_delta', default=1e-3, type=float,
+                        help='minimum validation-loss decrease required to reset early stopping')
     parser.add_argument('--loss', default='MSE', type=str, help='loss function, options: BCE, MSE')
     parser.add_argument('--optim', default='Adam', type=str, help='optim, options: SGD, Adam')
     parser.add_argument('--lr', default=1e-4, type=float, help='learning rate')
@@ -229,6 +249,9 @@ def main():
     parser.add_argument('--retrieval_num', default=1, type=int, help='number of retrieval')
     parser.add_argument('--model_id', default='skapp_single_item', type=str, help='id of model')
     parser.add_argument('--num_workers', default=0, type=int, help='number of data loading workers')
+    parser.add_argument('--single_item_retrieval_limit', default=50, type=int,
+                        help='maximum retrieved items per source sample used for dynamic single-item training; '
+                             'set to 0 to use every retrieved item')
 
     args = parser.parse_args()
 

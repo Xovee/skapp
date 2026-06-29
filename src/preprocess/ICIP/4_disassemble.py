@@ -1,5 +1,6 @@
 import os
 import time
+import argparse
 
 
 def disassemble(path, output_path, retrieval_num):
@@ -10,10 +11,17 @@ def disassemble(path, output_path, retrieval_num):
     )
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Prepare dynamic ICIP single-item training paths.")
+    parser.add_argument("--retrieval_num", default=50, type=int, help="Number of retrieved UGCs per query")
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
     start_time = time.time()
 
-    retrieval_num = 500
+    retrieval_num = args.retrieval_num
     source_path = r'datasets/ICIP'
     disassemble_path = r'datasets/ICIP_dissembled'
 

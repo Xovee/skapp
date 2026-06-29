@@ -231,7 +231,7 @@ def list2set(path):
     return data
 
 
-def run_retrieval(dataset_path, output_dir=None, retrieval_num=500, seed=42):
+def run_retrieval(dataset_path, output_dir=None, retrieval_num=50, seed=42):
     dataset_path = Path(dataset_path)
     output_dir = Path(output_dir) if output_dir else dataset_path.parent
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -261,7 +261,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Split SMPD and retrieve top-K train-pool neighbors.")
     parser.add_argument("--dataset_path", default="datasets/SMPD/dataset.pkl", help="Input SMPD dataset pickle")
     parser.add_argument("--output_dir", default=None, help="Output directory for train/valid/test/retrieval_pool")
-    parser.add_argument("--retrieval_num", default=500, type=int, help="Number of retrieved UGCs per query")
+    parser.add_argument("--retrieval_num", default=50, type=int, help="Number of retrieved UGCs per query")
     parser.add_argument("--seed", default=42, type=int, help="Random seed for train/valid/test split")
     return parser.parse_args()
 

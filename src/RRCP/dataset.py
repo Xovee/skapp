@@ -70,12 +70,17 @@ def _retrieved_labels(dataframe):
 
 class MyData(torch.utils.data.Dataset):
 
-    def __init__(self, retrieval_num, path, single_item_seed=42):
+    def __init__(self, retrieval_num, path, single_item_seed=42, single_item_retrieval_limit=None):
         super().__init__()
 
         self.path = Path(path)
         self.retrieval_num = int(retrieval_num)
         self.single_item_seed = int(single_item_seed)
+        if single_item_retrieval_limit is None:
+            self.single_item_retrieval_limit = None
+        else:
+            single_item_retrieval_limit = int(single_item_retrieval_limit)
+            self.single_item_retrieval_limit = single_item_retrieval_limit if single_item_retrieval_limit > 0 else None
         self.dynamic_single_item = False
 
         if self._init_dynamic_single_item():
@@ -113,7 +118,10 @@ class MyData(torch.utils.data.Dataset):
         self.mean_pooling_vec = _stack_feature(self.dataframe['mean_pooling_vec'])
         self.merge_text_vec = _stack_feature(self.dataframe['merged_text_vec'])
         self.retrieval_label_list = _retrieved_labels(self.dataframe)
-        self.source_retrieval_num = self.retrieval_label_list.shape[1]
+        source_retrieval_num = self.retrieval_label_list.shape[1]
+        if self.single_item_retrieval_limit is not None:
+            source_retrieval_num = min(source_retrieval_num, self.single_item_retrieval_limit)
+        self.source_retrieval_num = source_retrieval_num
         self.use_feature_bank = self._init_feature_bank(self.dataframe)
 
         if not self.use_feature_bank:

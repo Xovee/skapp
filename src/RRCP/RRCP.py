@@ -188,15 +188,20 @@ if __name__ == '__main__':
     parser.add_argument('--all_model_path', type=str, required=True, help='Path to all models')
     parser.add_argument('--dissembled_model_path', type=str, required=True, help='Path to dissembled models')
     parser.add_argument('--dataset_path', type=str, required=True, help='Path to dataset')
+    parser.add_argument('--retrieval_num', type=int, default=50,
+                        help='number of retrieved items used for RRCP generation')
+    parser.add_argument('--target_num', type=int, default=None,
+                        help='number of retrieved items expected by the all-item RRCP model; defaults to retrieval_num')
 
     args = parser.parse_args()
 
-    target_num = 500
+    target_num = args.target_num if args.target_num is not None else args.retrieval_num
     all_model_path = args.all_model_path
     dissembled_model_path = args.dissembled_model_path
 
-    retrieval_num = 500
+    retrieval_num = args.retrieval_num
     original_path = args.dataset_path
+    print(f'RRCP generation uses retrieval_num={retrieval_num}, target_num={target_num}.')
 
     for dataset in ['train', 'valid', 'test']:
         input_path = f'{original_path}/{dataset}.pkl'

@@ -37,13 +37,28 @@ def load_cfg(dataset_id, mode):
     return mode_cfg
 
 
-def apply_cfg(parser, args, cfg):
+def explicit_arg_dests(parser, argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    explicit = set()
+    for token in argv:
+        option = token.split('=', 1)[0]
+        for action in parser._actions:
+            if option in action.option_strings:
+                explicit.add(action.dest)
+                break
+    return explicit
+
+
+def apply_cfg(parser, args, cfg, explicit_args=None):
+    explicit_args = explicit_args or set()
     action_by_dest = {
         action.dest: action
         for action in parser._actions
         if action.dest != argparse.SUPPRESS
     }
     for key, value in cfg.items():
+        if key in explicit_args:
+            continue
         action = action_by_dest.get(key)
         if action is not None and action.type is not None and value is not None:
             value = action.type(value)
@@ -307,7 +322,7 @@ def main():
     parser.add_argument('--decay_rate', default=1.0, type=float, help='learning rate decay rate')
     parser.add_argument('--dataset_id', default='ICIP', type=str, help='id of dataset')
     parser.add_argument('--dataset_path', default=r'./datasets', type=str, help='path of dataset')
-    parser.add_argument('--retrieval_num', default=500, type=int, help='number of retrieval')
+    parser.add_argument('--retrieval_num', default=50, type=int, help='number of retrieval')
     parser.add_argument('--model_id', default='SKAPP', type=str, help='id of model')
     parser.add_argument('--threshold_of_RRCP', default=0, type=float)
     parser.add_argument('--num_workers', default=0, type=int, help='number of data loading workers')
@@ -319,7 +334,7 @@ def main():
     args = parser.parse_args()
 
     cfg = load_cfg(args.dataset_id, 'train')
-    apply_cfg(parser, args, cfg)
+    apply_cfg(parser, args, cfg, explicit_arg_dests(parser))
     resolve_metadata_fields(args)
 
     seed_init(args.seed)

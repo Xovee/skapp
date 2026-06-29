@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
+import argparse
 
 
 
@@ -269,7 +270,14 @@ def stack_retrieved_feature(train_path, valid_path, test_path):
 
     df_valid.to_pickle(valid_path)
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Split Instagram and retrieve top-K train-pool neighbors.")
+    parser.add_argument("--retrieval_num", default=50, type=int, help="Number of retrieved UGCs per query")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
+    args = parse_args()
 
     dataset_path = r'datasets/INS/dataset.pkl'
     train_path = r'datasets/INS/train.pkl'
@@ -283,9 +291,9 @@ if __name__ == "__main__":
     create_retrieval_pool(train_path, valid_path, retrieval_pool_path)
     print('Create retrieval pool done!')
 
-    retrieval_data(500, train_path, retrieval_pool_path)
-    retrieval_data(500, valid_path, retrieval_pool_path)
-    retrieval_data(500, test_path, retrieval_pool_path)
+    retrieval_data(args.retrieval_num, train_path, retrieval_pool_path)
+    retrieval_data(args.retrieval_num, valid_path, retrieval_pool_path)
+    retrieval_data(args.retrieval_num, test_path, retrieval_pool_path)
 
     print('Retrieval done!')
 
