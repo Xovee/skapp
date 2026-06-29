@@ -1,4 +1,5 @@
 import os
+import argparse
 
 
 def disassemble(path, output_path, retrieval_num):
@@ -9,8 +10,15 @@ def disassemble(path, output_path, retrieval_num):
     )
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Prepare dynamic single-item training paths.")
+    parser.add_argument("--retrieval_num", default=50, type=int, help="Number of retrieved UGCs per query")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    retrieval_num = 200
+    args = parse_args()
+    retrieval_num = args.retrieval_num
 
     source_path = r'datasets/origin'
     disassemble_path = r'datasets/dissembled'

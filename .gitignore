@@ -6,3 +6,5 @@ run_logs/
 *.txt
 *.pth
 *.pkl
+saved_models/*
+!saved_models/.keep

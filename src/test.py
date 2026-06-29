@@ -72,7 +72,9 @@ def print_init_msg(logger, args):
     logger.info(BLUE + 'Model: ' + ENDC + f"{args.model_path} ")
     logger.info(BLUE + "Dataset: " + ENDC + f"{args.dataset_id}")
     logger.info(BLUE + "Metric: " + ENDC + f"{args.metric}")
+    logger.info(BLUE + "Retrieval Num: " + ENDC + f"{args.retrieval_num}")
     logger.info(BLUE + "Metadata Fields: " + ENDC + f"{args.metadata_fields}")
+    logger.info(BLUE + "Metadata Transform: " + ENDC + f"{args.metadata_transform}")
     logger.info(BLUE + "Testing Starts!" + ENDC)
 
 
@@ -143,10 +145,8 @@ def test(args):
             output = model.forward(mean_pooling_vec, merge_text_vec, retrieved_visual_feature_embedding_cls, \
                                    retrieved_textual_feature_embedding, retrieved_label_list, RRCP, metadata)
 
-            output = output.to('cpu')
-            label = label.to('cpu')
-            output = np.array(output)
-            label = np.array(label)
+            output = output.detach().cpu().numpy()
+            label = label.detach().cpu().numpy()
 
             MAE = mean_absolute_error(label, output)
             SRC, _ = spearmanr(output, label)
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset_id', default='ICIP', type=str, help='id of dataset')
     parser.add_argument('--dataset_path', default=r'./datasets', type=str, help='path of dataset')
     parser.add_argument('--model_id', default='SKAPP', type=str, help='id of model')
-    parser.add_argument('--retrieval_num', default=500, type=int, help='number of retrieval')
+    parser.add_argument('--retrieval_num', default=50, type=int, help='number of retrieval')
     parser.add_argument('--model_path',
                         default=r"",
                         type=str, help='path of trained model')
