@@ -22,7 +22,7 @@ def _stack_feature(series):
 
 
 def _build_retrieval_indices(id_lists, retrieval_pool_ids, retrieval_num, chunk_rows=4096):
-    pool_ids = pd.Index(retrieval_pool_ids)
+    pool_ids = pd.Index([str(item_id) for item_id in retrieval_pool_ids])
     pool_positions = pd.Series(np.arange(len(pool_ids), dtype=np.int64), index=pool_ids)
     pool_positions = pool_positions[~pool_positions.index.duplicated(keep='last')]
 
@@ -40,7 +40,7 @@ def _build_retrieval_indices(id_lists, retrieval_pool_ids, retrieval_num, chunk_
                 )
             chunk.append(item_ids[:retrieval_num])
 
-        id_array = np.asarray(chunk, dtype=object)
+        id_array = np.asarray(chunk, dtype=object).astype(str)
         flat_indices = pool_positions.reindex(id_array.reshape(-1)).to_numpy()
         missing_mask = pd.isna(flat_indices)
         if missing_mask.any():

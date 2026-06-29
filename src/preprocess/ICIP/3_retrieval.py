@@ -1,178 +1,52 @@
-import time
 import argparse
+import sys
+import time
+from pathlib import Path
 
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from tqdm import tqdm
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-
-def split_and_save_pkl(input_path, train_path, valid_path, test_path):
-    # split the dataset into train/validation/test sets and save them as pickle files
-    dataset = pd.read_pickle(input_path)
-
-    train_data, valid_data = train_test_split(dataset, test_size=0.2, random_state=42)
-    valid_data, test_data = train_test_split(valid_data, test_size=0.5, random_state=42)
-
-    train_data.reset_index(drop=True, inplace=True)
-    valid_data.reset_index(drop=True, inplace=True)
-    test_data.reset_index(drop=True, inplace=True)
-
-    train_data.to_pickle(train_path)
-    valid_data.to_pickle(valid_path)
-    test_data.to_pickle(test_path)
+from retrieval_utils import run_retrieval_pipeline
 
 
-def create_retrieval_pool(train_path, valid_path, retrieval_pool_path):
-    # use the train split only to form the retrieval pool
-    retrieval_pool = pd.read_pickle(train_path).copy()
-    retrieval_pool.reset_index(drop=True, inplace=True)
-    retrieval_pool.to_pickle(retrieval_pool_path)
-
-    return retrieval_pool
-
-
-def calculate_similarity(query_features, dataset_features, N, list_columns):
-    # compute similarity between query and dataset samples based on matching fields
-    result = np.zeros((len(dataset_features), len(query_features)), dtype=int)
-
-    for i, feature in enumerate(query_features):
-        if i in list_columns:
-            # for list-type features, check the intersections
-            result[:, i] = [bool(set(feature) & set(df_feature)) for df_feature in dataset_features[:, i]]
-        else:
-            # for other features, check for equality
-            result[:, i] = (dataset_features[:, i] == feature)
-
-    # calculate the number of matches
-    n_values = result.sum(axis=0)
-
-    def f_similarity(n):
-        return abs( np.log((N - n + 0.5) / (n + 0.5)))
-
-    similarity = np.dot(result, f_similarity(n_values))
-
-    return similarity
-
-
-def retrieval_data(retrieval_num, data_path, retrieval_pool_path):
-    # retrieval top-N similar UGCs for each query UGC in the pool
-    dataset = pd.read_pickle(retrieval_pool_path)
-    data = pd.read_pickle(data_path)
-
-    all_features = ['user_id', 'date_posted', 'date_taken', 'date_crawl', 'tags', 'contacts',
-                    'photo_count', 'mean_views', 'nouns', 'verbs']
-    list_columns = [all_features.index(col) for col in ['tags', 'nouns', 'verbs']]
-
-    dataset_array = dataset[all_features].values
-    data_array = data[all_features].values
-    retrieval_ids = dataset['image_id'].astype(str).to_numpy()
-    data_ids = data['image_id'].astype(str).to_numpy()
-    N = len(dataset)
-
-    retrieved_item_id_list = []
-    retrieved_item_similarity_list = []
-    retrieved_label_list = []
-
-    for i in tqdm(range(len(data))):
-        query_features = data_array[i]
-        similarities = calculate_similarity(query_features, dataset_array, N, list_columns)
-        similarities[retrieval_ids == data_ids[i]] = -np.inf
-        retrieval_indices = np.argsort(similarities)[::-1][:retrieval_num]
-        retrieved_items = dataset.iloc[retrieval_indices]
-
-        retrieved_item_id_list.append(retrieved_items['image_id'].tolist())
-        retrieved_item_similarity_list.append(similarities[retrieval_indices].tolist())
-        retrieved_label_list.append(retrieved_items['label'].tolist())
-
-    data['retrieved_item_id'] = retrieved_item_id_list
-    data['retrieved_item_similarity'] = retrieved_item_similarity_list
-    data['retrieved_label'] = retrieved_label_list
-    data.to_pickle(data_path)
-
-
-def _stack_features(df_split, df_database):
-    # helper function to stack features
-    retrieved_cls_list, retrieved_mean_list, retrieved_text_list, retrieved_label_list = [], [], [], []
-
-    for id_list in tqdm(df_split['retrieved_item_id']):
-        cls_list, mean_list, text_list, label_list = [], [], [], []
-
-        for item_id in id_list:
-            matched = df_database[df_database['image_id'] == item_id]
-            if matched.empty:
-                continue
-            row = matched.iloc[0]
-            cls_list.append(row['cls_vec'])
-            mean_list.append(row['mean_pooling_vec'])
-            text_list.append(row['merged_text_vec'])
-            label_list.append(row['label'])
-
-        retrieved_cls_list.append(cls_list)
-        retrieved_mean_list.append(mean_list)
-        retrieved_text_list.append(text_list)
-        retrieved_label_list.append(label_list)
-
-    df_split['retrieved_visual_feature_embedding_cls'] = retrieved_cls_list
-    df_split['retrieved_visual_feature_embedding_mean'] = retrieved_mean_list
-    df_split['retrieved_textual_feature_embedding'] = retrieved_text_list
-    df_split['retrieved_label_list'] = retrieved_label_list
-
-    return df_split
-
-
-def stack_retrieved_feature(train_path, valid_path, test_path):
-    # Retrieved features are now resolved lazily from retrieval_pool.pkl during
-    # training/RRCP generation. Keep a label-list alias for older call sites.
-    for split_path in [train_path, valid_path, test_path]:
-        df_split = pd.read_pickle(split_path)
-        if 'retrieved_label_list' not in df_split.columns and 'retrieved_label' in df_split.columns:
-            df_split['retrieved_label_list'] = df_split['retrieved_label']
-        df_split.to_pickle(split_path)
-
-
-def list2set(path):
-    # de-duplicate items in list-type columns
-    data = pd.read_pickle(path)
-    for col in ['nouns', 'verbs', 'adjectives', 'tags']:
-        data[col] = data[col].apply(lambda x: list(set(x)))
-    data.to_pickle(path)
-
-    return data
+SCALAR_FEATURES = [
+    "user_id",
+    "date_posted",
+    "date_taken",
+    "date_crawl",
+    "contacts",
+    "photo_count",
+    "mean_views",
+]
+LIST_FEATURES = ["tags", "nouns", "verbs"]
+EXTRA_LIST_COLUMNS = ["adjectives"]
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Split ICIP and retrieve top-K train-pool neighbors.")
+    parser.add_argument("--dataset_path", default="datasets/ICIP/dataset.pkl", help="Input ICIP dataset pickle")
+    parser.add_argument("--output_dir", default=None, help="Output directory for train/valid/test/retrieval_pool")
     parser.add_argument("--retrieval_num", default=50, type=int, help="Number of retrieved UGCs per query")
+    parser.add_argument("--seed", default=42, type=int, help="Random seed for train/valid/test split")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
     start_time = time.time()
-
-    dataset_path = r'datasets/ICIP/dataset.pkl'
-    train_path = r'datasets/ICIP/train.pkl'
-    valid_path = r'datasets/ICIP/valid.pkl'
-    test_path = r'datasets/ICIP/test.pkl'
-    retrieval_pool_path = r'datasets/ICIP/retrieval_pool.pkl'
-
-    list2set(dataset_path)
-    split_and_save_pkl(dataset_path, train_path, valid_path, test_path)
-    print('[1] Split dataset complete.')
-
-    create_retrieval_pool(train_path, valid_path, retrieval_pool_path)
-    print('[2] Create retrieval pool complete.')
-
-    retrieval_data(args.retrieval_num, train_path, retrieval_pool_path)
-    retrieval_data(args.retrieval_num, valid_path, retrieval_pool_path)
-    retrieval_data(args.retrieval_num, test_path, retrieval_pool_path)
-    print('[3] Retrieval data complete.')
-
-    stack_retrieved_feature(train_path, valid_path, test_path)
-    print('[4] Stack retrieved features complete.')
-
-    # display the runtime
+    run_retrieval_pipeline(
+        dataset_path=args.dataset_path,
+        output_dir=args.output_dir,
+        retrieval_num=args.retrieval_num,
+        scalar_features=SCALAR_FEATURES,
+        list_features=LIST_FEATURES,
+        extra_list_columns=EXTRA_LIST_COLUMNS,
+        seed=args.seed,
+        dataset_name="ICIP",
+        weight_mode="idf",
+        absolute_weight=True,
+        tie_break="desc",
+        include_zero_score_candidates=True,
+    )
     print(f"Runtime: {(time.time() - start_time) / 60:.2f} minutes")
 
 
