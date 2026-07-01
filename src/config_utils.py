@@ -18,7 +18,7 @@ def config_dataset_id(dataset_id):
 
 
 def config_path():
-    repo_config = Path(__file__).resolve().parents[2] / 'config.yaml'
+    repo_config = Path(__file__).resolve().parents[1] / 'config.yaml'
     if repo_config.exists():
         return repo_config
     cwd_config = Path('config.yaml')

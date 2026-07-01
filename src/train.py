@@ -1,6 +1,6 @@
 import logging
 import os
-import yaml, argparse, sys
+import argparse, sys
 from datetime import datetime
 from tqdm import tqdm
 
@@ -8,6 +8,7 @@ import torch
 from torch.optim import Adam, SGD
 from torch.utils.data import DataLoader
 
+from config_utils import apply_cfg, explicit_arg_dests, load_cfg
 from dataset import MyData, custom_collate_fn
 from RRCP_prediction_variable_lenth import RRCP_prediction as my_model
 import random
@@ -22,47 +23,6 @@ DEFAULT_METADATA_FIELDS = {
 DEFAULT_METADATA_TRANSFORMS = {
     'ICIP': 'log1p',
 }
-
-
-def load_cfg(dataset_id, mode):
-    with open("config.yaml") as f:
-        all_cfg = yaml.safe_load(f)
-
-    ds_cfg = all_cfg.get(dataset_id)
-    if ds_cfg is None:
-        sys.exit(f"Unknown dataset_id: {dataset_id}")
-    mode_cfg = ds_cfg.get(mode)
-    if mode_cfg is None:
-        sys.exit(f"Unknown mode: {mode} under dataset_id: {dataset_id}")
-    return mode_cfg
-
-
-def explicit_arg_dests(parser, argv=None):
-    argv = sys.argv[1:] if argv is None else argv
-    explicit = set()
-    for token in argv:
-        option = token.split('=', 1)[0]
-        for action in parser._actions:
-            if option in action.option_strings:
-                explicit.add(action.dest)
-                break
-    return explicit
-
-
-def apply_cfg(parser, args, cfg, explicit_args=None):
-    explicit_args = explicit_args or set()
-    action_by_dest = {
-        action.dest: action
-        for action in parser._actions
-        if action.dest != argparse.SUPPRESS
-    }
-    for key, value in cfg.items():
-        if key in explicit_args:
-            continue
-        action = action_by_dest.get(key)
-        if action is not None and action.type is not None and value is not None:
-            value = action.type(value)
-        setattr(args, key, value)
 
 
 def parse_metadata_fields(value):

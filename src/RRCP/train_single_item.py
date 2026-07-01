@@ -3,15 +3,18 @@ import os
 import sys
 import argparse
 from datetime import datetime
+from pathlib import Path
 from tqdm import tqdm
 
 import torch
 from torch.optim import Adam, SGD
 from torch.utils.data import DataLoader
 
+sys.path.insert(1, str(Path(__file__).resolve().parents[1]))
+
+from config_utils import apply_cfg, explicit_arg_dests, load_cfg
 from dataset import MyData, custom_collate_fn
 from predict_model import RRCP_Model as my_model
-from config_utils import apply_cfg, explicit_arg_dests, load_cfg
 import random
 import numpy as np
 from scipy.stats import spearmanr
