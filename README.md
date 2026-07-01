@@ -84,18 +84,16 @@ Here we take the ICIP dataset as an example to demonstrate the usage.
 ### Preprocess
 
 Run the following commands for preprocessing the datasets. During preprocessing,
-the pretrained models will be downloaded once.
+the pretrained models will be downloaded once. Runtime varies by machine; the
+rough ICIP times below are from one local workstation.
 
 ```shell
 cd skapp
-python src/preprocess/ICIP/1_build_dataset.py  # about 10 minutes for ICIP
+python src/preprocess/ICIP/1_build_dataset.py  # about 15 minutes for ICIP
 python src/preprocess/ICIP/2_preprocess.py  # about 5 minutes for ICIP
-python src/preprocess/ICIP/3_retrieval.py  # about 40 minutes for ICIP
+python src/preprocess/ICIP/3_retrieval.py  # about 5-10 minutes for ICIP
 python src/preprocess/ICIP/4_disassemble.py  # prepares the dynamic single-item training split
 ```
-
-The disassembly step no longer materializes a huge expanded pickle file. The
-single-item RRCP dataset is expanded dynamically during training.
 
 ### Pre-training
 
