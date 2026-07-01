@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 
 from dataset import MyData, custom_collate_fn
 from predict_model import RRCP_Model as my_model
+from config_utils import apply_cfg, explicit_arg_dests, load_cfg
 import random
 import numpy as np
 from scipy.stats import spearmanr
@@ -240,6 +241,9 @@ def main():
     parser.add_argument('--num_workers', default=0, type=int, help='number of data loading workers')
 
     args = parser.parse_args()
+
+    cfg = load_cfg(args.dataset_id, 'train_all_item')
+    apply_cfg(parser, args, cfg, explicit_arg_dests(parser))
 
     seed_init(args.seed)
     train_val(args)
