@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "datasets": {
+    "icip": {
+      "release": "v1",
+      "filename": "skapp-icip.zip",
+      "bytes": 247115334,
+      "sha256": "adeee938a0a587147630aa3483e1b19fdb2e936f07e43f65d9bc8b6de7b64f1c",
+      "unpacked_bytes": 352571946,
+      "dataset_sha256": "76dfa7da37ac69a90e083b1a545187e0907a862e1ba8ec2133bc5d8eaa233d67",
+      "url": "https://drive.google.com/file/d/1_jq2UodKJCPZCepsJO5xCHfE5bkxJd6o/view?usp=drivesdk"
+    },
+    "smpd": {
+      "release": "v1",
+      "filename": "skapp-smpd.zip",
+      "bytes": 3746190046,
+      "sha256": "445a25eba814b97c938a727817a00d82e54be7761b8020c2ca79dd58fa87e0a5",
+      "unpacked_bytes": 5298115968,
+      "dataset_sha256": "fa52e8467fb9687b0587d2e80eaeafc5863de5ab9d878aacc75b9ad3942ae60b",
+      "url": "https://drive.google.com/file/d/1fsEKVirmxn-EAaHvL7WXprXENV5-ui8X/view?usp=drivesdk"
+    },
+    "instagram": {
+      "release": "v1",
+      "filename": "skapp-instagram.zip",
+      "bytes": 3552297756,
+      "sha256": "84fb1e71f460f70c61c8ed61004a1f310b3275fb3a56a63558e4f095136011f1",
+      "unpacked_bytes": 5176661630,
+      "dataset_sha256": "7784dc6a52ac6e9ca8c597f8a21a6a6291357a63a9c0a5185a843cd6a8f2ede5",
+      "url": "https://drive.google.com/file/d/193wkMSBxOZ2PPioatywtSRj_WcV8Y4Cc/view?usp=drivesdk"
+    }
+  }
+}

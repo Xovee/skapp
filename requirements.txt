@@ -1,0 +1,7 @@
+# Python 3.12. Install PyTorch for your CUDA runtime separately.
+numpy==2.2.6
+pandas==3.0.3
+scipy==1.13.1
+scikit-learn==1.6.1
+pyarrow==25.0.0
+gdown==5.2.0
